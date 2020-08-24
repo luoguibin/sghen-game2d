@@ -48,6 +48,47 @@ export default class Main {
     this.touchIdentifier = null
 
     this.restart()
+
+    const token = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1OTg4NjUyMzAsImlhdCI6MTU5ODI2MDQzMCwidUxldmVsIjoiOSIsInVzZXJJZCI6IjE2NDA1IiwidXNlck5hbWUiOiLkuYLmnKsifQ.2frLjnwf9C9tyiozPn93iq88BNLtfAKmZOGMtYMqiJQ`
+    const wsUrl = 'wss://www.sghen.cn/ggapi/auth/game2d?token=' + token
+
+    const socket = new WebSocket(wsUrl)
+    socket.addEventListener('open', (event) => {
+      console.log('socket is open', event)
+    })
+
+    socket.addEventListener('message', (event) => {
+      console.log(event)
+      this.dealMsg(event.data)
+    })
+
+    this.ws = socket
+    setInterval(() => {
+      this.sendMsg({ id: -1 })
+    }, 5000)
+  }
+
+  sendMsg (o) {
+    o.userId = 16405
+    this.ws.send(JSON.stringify(o))
+  }
+
+  dealMsg (msg) {
+    if (!msg) {
+      return
+    }
+    console.log(msg, JSON.parse(msg))
+    const { id, data } = JSON.parse(msg)
+    switch (id) {
+      case 100:
+        this.player.walk(data)
+        break
+      case 101:
+        this.player.startNextSkill0()
+        break
+      default:
+        break
+    }
   }
 
   restart () {
@@ -73,11 +114,37 @@ export default class Main {
             if (value > -2) {
               if (this.touchIdentifier === null) {
                 this.touchIdentifier = touch.identifier
-                player.walk(value)
+                if (this.preWalkValue === value) {
+                  return
+                }
+                this.preWalkValue = value
+                this.sendMsg({ id: 100, data: value })
               }
             } else {
-              player.startNextSkill0()
+              this.sendMsg({ id: 101 })
             }
+          }
+        }
+      }
+        break
+      case 'touchmove': {
+        const touchIdentifier = this.touchIdentifier
+        if (touchIdentifier === null) {
+          return
+        }
+        const touches = e.touches
+        for (let i = 0; i < touches.length; i++) {
+          if (touchIdentifier === touches[i].identifier) {
+            const touch = touches[i]
+            const { value } = this.directionView.testXY(touch.clientX, touch.clientY) || {}
+            if (value !== undefined && value > -2) {
+              if (this.preWalkValue === value) {
+                return
+              }
+              this.preWalkValue = value
+              this.sendMsg({ id: 100, data: value })
+            }
+            break
           }
         }
       }
@@ -88,10 +155,12 @@ export default class Main {
           const touches = e.touches || []
           if (touches.length === 0) {
             this.touchIdentifier = null
+            this.preWalkValue = null
           } else {
             const index = touches.findIndex(o => o.identifier === this.touchIdentifier)
             if (index === -1) {
               this.touchIdentifier = null
+              this.preWalkValue = null
             }
           }
         }

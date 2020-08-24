@@ -17,12 +17,19 @@ export default {
   mounted () {
     window.app = this
     this.gameMain = new GameMain(this.$refs.canvas)
-    document.body.addEventListener('touchmove', function (e) {
-      e.preventDefault()
+    document.oncontextmenu = function () {
       return false
-    }, {
-      passive: false
-    })
+    }
+    document.body.addEventListener(
+      'touchmove',
+      function (e) {
+        e.preventDefault()
+        return false
+      },
+      {
+        passive: false
+      }
+    )
   }
 }
 </script>
