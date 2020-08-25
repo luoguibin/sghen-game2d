@@ -19,6 +19,7 @@ export default class Main {
    */
   constructor (canvas, { id, token, username }) {
     this.id = id
+    this.token = token
 
     // 抗锯齿
     canvas.setAttribute('width', CANVAS_WIDTH)
@@ -54,15 +55,25 @@ export default class Main {
 
     this.restart()
 
-    const wsUrl = 'wss://www.sghen.cn/ggapi/auth/game2d?token=' + token
-    // const wsUrl = 'ws://10.48.84.235:8282/auth/game2d?token=' + token
+    this.initWS()
+  }
+
+  initWS () {
+    const wsUrl = 'wss://www.sghen.cn/ggapi/auth/game2d?token=' + this.token
+    // const wsUrl = 'ws://10.48.84.235:8282/auth/game2d?token=' + this.token
+
+    if (this.heartTimer) {
+      clearInterval(this.heartTimer)
+    }
 
     const socket = new WebSocket(wsUrl)
     socket.addEventListener('open', () => {
       console.log('socket is open')
+
+      this.ws = socket
       this.sendMsg({ id: ORDER.LOGIN })
 
-      setInterval(() => {
+      this.heartTimer = setInterval(() => {
         this.sendMsg({ id: ORDER.HEART_BEAT })
       }, 5000)
     })
@@ -70,8 +81,6 @@ export default class Main {
     socket.addEventListener('message', (event) => {
       this.dealMsg(event.data)
     })
-
-    this.ws = socket
   }
 
   sendMsg (o) {
