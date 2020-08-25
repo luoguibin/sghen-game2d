@@ -69,13 +69,7 @@ export default class Main {
     const socket = new WebSocket(wsUrl)
     socket.addEventListener('open', () => {
       console.log('socket is open')
-
       this.ws = socket
-      this.sendMsg({ id: ORDER.LOGIN })
-
-      this.heartTimer = setInterval(() => {
-        this.sendMsg({ id: ORDER.HEART_BEAT })
-      }, 5000)
     })
 
     socket.addEventListener('message', (event) => {
@@ -84,6 +78,9 @@ export default class Main {
   }
 
   sendMsg (o) {
+    if (!this.ws) {
+      return
+    }
     o.userId = this.id
     this.ws.send(JSON.stringify(o))
   }
@@ -127,11 +124,25 @@ export default class Main {
         if (this.id === userId) {
           this.players.push(this.player)
           this.player.obstacleCall = this.obstacleCall.bind(this)
+          this.heartTimer = setInterval(() => {
+            this.sendMsg({ id: ORDER.HEART_BEAT })
+          }, 5000)
         } else {
           const { id, username } = data
           const newPlayer = new Player(id, username)
           newPlayer.obstacleCall = this.obstacleCall.bind(this)
           this.players.push(newPlayer)
+        }
+        break
+      case ORDER.LOGIN_RECONNECT:
+        if (this.id === userId) {
+          if (this.players.findIndex(o => o === this.player) === -1) {
+            this.players.push(this.player)
+            this.player.obstacleCall = this.obstacleCall.bind(this)
+            this.heartTimer = setInterval(() => {
+              this.sendMsg({ id: ORDER.HEART_BEAT })
+            }, 5000)
+          }
         }
         break
       default:
