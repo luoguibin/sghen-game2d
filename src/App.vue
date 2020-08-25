@@ -16,7 +16,7 @@ export default {
 
   mounted () {
     window.app = this
-    const temp = localStorage.getItem('sghen_user_info') || '{}'
+    const temp = localStorage.getItem('sghen_user_info') || 'e30=' // btoa('{}') => 'e30='
     const userInfo = JSON.parse(window.decodeURIComponent(window.atob(temp)))
     if (!userInfo || !userInfo.token) {
       if (localStorage.getItem('login')) {
