@@ -54,8 +54,8 @@ export default class Main {
 
     this.restart()
 
-    // const wsUrl = 'wss://www.sghen.cn/ggapi/auth/game2d?token=' + token
-    const wsUrl = 'ws://10.48.84.235:8282/auth/game2d?token=' + token
+    const wsUrl = 'wss://www.sghen.cn/ggapi/auth/game2d?token=' + token
+    // const wsUrl = 'ws://10.48.84.235:8282/auth/game2d?token=' + token
 
     const socket = new WebSocket(wsUrl)
     socket.addEventListener('open', () => {
