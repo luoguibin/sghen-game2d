@@ -34,6 +34,7 @@ export const SKILL_DIRECTION = {
 
 export default class Skill0 {
   constructor (x, y, direction) {
+    this.id = Date.now()
     this.img = new Image()
     this.img.src = require('@/images/bullet.png')
 

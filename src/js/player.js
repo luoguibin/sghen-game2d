@@ -28,13 +28,17 @@ const MAX_BULLET_COUNT = 100
  * 玩家
  */
 export default class Player {
-  constructor () {
+  constructor (id, userName) {
+    this.id = id
+    this.userName = userName
+
     this.img = new Image()
     this.img.src = require('@/images/player.png')
     this.direction = DIRECTIONS.TOP
+    this.isMoveing = false
 
-    this.x = WINDOW_WIDTH / 2
-    this.y = WINDOW_HEIGHT / 2
+    this.x = WINDOW_WIDTH / 2 >> 0
+    this.y = WINDOW_HEIGHT / 2 >> 0
     this.stepValue = 0
     this.score = 0
 
@@ -42,10 +46,30 @@ export default class Player {
 
     this.bulletTotal = 5
     this.bulletCount = this.bulletTotal
+
+    this.obstacleCall = function () {}
   }
 
   walk (direction) {
-    this.direction = direction
+    if (direction < 0) {
+      this.isMoveing = false
+    } else {
+      this.direction = direction
+      this.isMoveing = true
+    }
+  }
+
+  newHit (obstacle, skillId) {
+    const skills = this.skills
+    const index = skills.findIndex(o => o.id === skillId)
+    const skill = skills.splice(index, 1)[0]
+    if (!skill) {
+      return
+    }
+    this.addBullet(1)
+
+    const skill1 = new Skill1(obstacle.x, obstacle.y)
+    this.skills.push(skill1)
   }
 
   addBullet (v0, max = 0) {
@@ -78,21 +102,13 @@ export default class Player {
         }
         for (let j = obstacles.length - 1; j >= 0; j--) {
           const obstacle = obstacles[j]
+          if (obstacle.isLocked) {
+            continue
+          }
           const d = getDistance(obstacle.x, obstacle.y, skill.x, skill.y)
           if (d < obstacle.value + 15) {
-            if (obstacle.type === 'add') {
-              this.addBullet(obstacle.value)
-            } else if (obstacle.type === 'add-all') {
-              this.addBullet(obstacle.value, 1)
-            }
-            obstacles.splice(j, 1)
-            skills.splice(i, 1)
-            this.addBullet(1)
-
-            const skill1 = new Skill1(obstacle.x, obstacle.y)
-            this.skills.push(skill1)
-
-            this.addScore(obstacle.value)
+            obstacle.isLocked = true
+            this.obstacleCall(obstacle, skill, this)
           }
         }
       }
@@ -111,6 +127,9 @@ export default class Player {
   }
 
   update (MAP) {
+    if (!this.isMoveing) {
+      return
+    }
     this.stepValue += STEP / PLAYER_SIZE.WIDTH * 2
     switch (this.direction) {
       case DIRECTIONS.TOP:
@@ -158,11 +177,15 @@ export default class Player {
       PLAYER_SIZE.WIDTH,
       PLAYER_SIZE.HEIGHT
     )
-
-    ctx.translate(-WINDOW_WIDTH / 2, -WINDOW_HEIGHT / 2)
+    ctx.textAlign = 'center'
     ctx.fillStyle = '#ffffff'
-    ctx.fillText(`x:${this.x} y:${this.y}`, 0, 12)
-    ctx.fillText(`bullet: ${this.bulletCount}/${this.bulletTotal} score: ${this.score}`, WINDOW_WIDTH / 2 - 30, 12)
+    ctx.fillText(this.userName, 0, -PLAYER_SIZE.HALF_HEIGHT)
+
+    ctx.translate(0, -WINDOW_HEIGHT / 2)
+    ctx.fillText(`bullet: ${this.bulletCount}/${this.bulletTotal} score: ${this.score}`, 0, 12)
+    ctx.textAlign = 'left'
+    ctx.fillText(`x:${this.x} y:${this.y}`, -WINDOW_WIDTH / 2, 12)
+
     ctx.restore()
 
     this.skills.forEach(o => {

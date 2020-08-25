@@ -6,6 +6,7 @@ import {
   CANVAS_HEIGHT,
   MAP
 } from './const'
+import { ORDER } from './order'
 import DirectionView from './direction-view'
 import Player from './player'
 
@@ -16,7 +17,9 @@ export default class Main {
   /**
    * @param {HTMLCanvasElement} canvas
    */
-  constructor (canvas) {
+  constructor (canvas, { id, token, username }) {
+    this.id = id
+
     // 抗锯齿
     canvas.setAttribute('width', CANVAS_WIDTH)
     canvas.setAttribute('height', CANVAS_HEIGHT)
@@ -40,8 +43,10 @@ export default class Main {
     canvas.addEventListener('touchmove', this.touchHandler)
     canvas.addEventListener('touchend', this.touchHandler)
 
-    this.player = new Player()
+    // 初始化登录的玩家
+    this.player = new Player(id, username)
 
+    this.players = []
     this.obstacles = []
 
     this.directionView = new DirectionView()
@@ -49,27 +54,28 @@ export default class Main {
 
     this.restart()
 
-    const token = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1OTg4NjUyMzAsImlhdCI6MTU5ODI2MDQzMCwidUxldmVsIjoiOSIsInVzZXJJZCI6IjE2NDA1IiwidXNlck5hbWUiOiLkuYLmnKsifQ.2frLjnwf9C9tyiozPn93iq88BNLtfAKmZOGMtYMqiJQ`
-    const wsUrl = 'wss://www.sghen.cn/ggapi/auth/game2d?token=' + token
+    // const wsUrl = 'wss://www.sghen.cn/ggapi/auth/game2d?token=' + token
+    const wsUrl = 'ws://10.48.84.235:8282/auth/game2d?token=' + token
 
     const socket = new WebSocket(wsUrl)
-    socket.addEventListener('open', (event) => {
-      console.log('socket is open', event)
+    socket.addEventListener('open', () => {
+      console.log('socket is open')
+      this.sendMsg({ id: ORDER.LOGIN })
+
+      setInterval(() => {
+        this.sendMsg({ id: ORDER.HEART_BEAT })
+      }, 5000)
     })
 
     socket.addEventListener('message', (event) => {
-      console.log(event)
       this.dealMsg(event.data)
     })
 
     this.ws = socket
-    setInterval(() => {
-      this.sendMsg({ id: -1 })
-    }, 5000)
   }
 
   sendMsg (o) {
-    o.userId = 16405
+    o.userId = this.id
     this.ws.send(JSON.stringify(o))
   }
 
@@ -77,14 +83,47 @@ export default class Main {
     if (!msg) {
       return
     }
-    console.log(msg, JSON.parse(msg))
-    const { id, data } = JSON.parse(msg)
+    const { id, userId, data } = JSON.parse(msg)
+    const player = this.players.find(o => o.id === userId)
+
     switch (id) {
-      case 100:
-        this.player.walk(data)
+      case ORDER.MOVE_START:
+        player.walk(data)
         break
-      case 101:
-        this.player.startNextSkill0()
+      case ORDER.MOVE_STOP:
+        player.walk(-1)
+        break
+      case ORDER.SKILL_BEGIN:
+        player.startNextSkill0()
+        break
+      case ORDER.SKILL_HIT: {
+        const { obstacleId, skillId } = data
+        console.log('SKILL_HIT', obstacleId, skillId)
+        const index = this.obstacles.findIndex(o => o.id === obstacleId)
+        const obstacle = this.obstacles.splice(index, 1)[0]
+        if (!obstacle) {
+          console.log('empty obstacle')
+          return
+        }
+        if (obstacle.type === 'add') {
+          player.addBullet(obstacle.value)
+        } else if (obstacle.type === 'add-all') {
+          player.addBullet(obstacle.value, 1)
+        }
+        player.addScore(obstacle.value)
+        player.newHit(obstacle, skillId)
+      }
+        break
+      case ORDER.LOGIN:
+        if (this.id === userId) {
+          this.players.push(this.player)
+          this.player.obstacleCall = this.obstacleCall.bind(this)
+        } else {
+          const { id, username } = data
+          const newPlayer = new Player(id, username)
+          newPlayer.obstacleCall = this.obstacleCall.bind(this)
+          this.players.push(newPlayer)
+        }
         break
       default:
         break
@@ -103,7 +142,6 @@ export default class Main {
    * @param {TouchEvent} e
    */
   touchEventHandler (e) {
-    const player = this.player
     switch (e.type) {
       case 'touchstart': {
         const touches = e.touches
@@ -118,10 +156,10 @@ export default class Main {
                   return
                 }
                 this.preWalkValue = value
-                this.sendMsg({ id: 100, data: value })
+                this.sendMsg({ id: ORDER.MOVE_START, data: value })
               }
             } else {
-              this.sendMsg({ id: 101 })
+              this.sendMsg({ id: ORDER.SKILL_BEGIN })
             }
           }
         }
@@ -142,7 +180,7 @@ export default class Main {
                 return
               }
               this.preWalkValue = value
-              this.sendMsg({ id: 100, data: value })
+              this.sendMsg({ id: ORDER.MOVE_START, data: value })
             }
             break
           }
@@ -152,16 +190,12 @@ export default class Main {
       case 'touchend':
       case 'touchcancel':
         {
-          const touches = e.touches || []
-          if (touches.length === 0) {
+          const touches = [...e.touches] || []
+          const index = touches.findIndex(o => o.identifier === this.touchIdentifier)
+          if ((index === -1 || touches.length === 0) && this.touchIdentifier !== null) {
             this.touchIdentifier = null
             this.preWalkValue = null
-          } else {
-            const index = touches.findIndex(o => o.identifier === this.touchIdentifier)
-            if (index === -1) {
-              this.touchIdentifier = null
-              this.preWalkValue = null
-            }
+            this.sendMsg({ id: ORDER.MOVE_STOP })
           }
         }
         break
@@ -210,23 +244,29 @@ export default class Main {
       ctx.fillText('' + o.value, o.x - 5, o.y + 5)
     })
 
-    this.player.render(ctx)
+    this.players.forEach(o => {
+      o.render(ctx)
+    })
 
     ctx.translate(cameraX, cameraY)
 
     this.directionView.render(ctx)
   }
 
+  obstacleCall (obstacle, skill, player) {
+    this.sendMsg({ id: ORDER.SKILL_HIT, userId: player.id, data: { obstacleId: obstacle.id, skillId: skill.id } })
+  }
+
   // 游戏逻辑更新主函数
   update () {
-    if (this.touchIdentifier !== null) {
-      this.player.update(MAP)
-    }
-
-    this.player.updateSkill(this.obstacles)
+    this.players.forEach(o => {
+      o.update(MAP)
+      o.updateSkill(this.obstacles)
+    })
 
     if (this.obstacles.length < 10) {
       const obstacle = {
+        id: Date.now(),
         x: Math.random() * MAP.WIDTH >> 0,
         y: Math.random() * MAP.HEIGHT >> 0,
         type: Math.random() < 0.1 ? 'add' : Math.random() < 0.1 ? 'add-all' : 'show',

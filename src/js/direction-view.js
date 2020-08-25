@@ -48,11 +48,13 @@ export default class DirectionView {
     ctx.save()
 
     ctx.strokeStyle = '#148acf'
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
     ctx.fillStyle = ctx.strokeStyle
 
     this.directions.forEach(o => {
       ctx.strokeRect(o.x, o.y, this.D_WIDTH, this.D_HEIGHT)
-      ctx.fillText(o.key, o.x + this.D_WIDTH / 3, o.y + this.D_HEIGHT / 2 + 4)
+      ctx.fillText(o.key, o.x + this.D_WIDTH / 2, o.y + this.D_HEIGHT / 2)
     })
 
     ctx.restore()
