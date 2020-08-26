@@ -1,5 +1,4 @@
 import {
-  PIXEL_RATIO,
   WINDOW_WIDTH,
   WINDOW_HEIGHT
 } from './const'
@@ -21,7 +20,7 @@ export const PLAYER_SIZE = {
   HALF_HEIGHT: Math.round(PLAYER_HEIGHT / 2)
 }
 
-const STEP = PIXEL_RATIO * 1
+const STEP = 2
 const MAX_BULLET_COUNT = 100
 
 /**
@@ -31,6 +30,7 @@ export default class Player {
   constructor (id, userName) {
     this.id = id
     this.userName = userName
+    this.isSelf = false
 
     this.img = new Image()
     this.img.src = require('@/images/player.png')
@@ -126,7 +126,7 @@ export default class Player {
     this.score += v
   }
 
-  update (MAP) {
+  update (map) {
     if (!this.isMoveing) {
       return
     }
@@ -149,13 +149,13 @@ export default class Player {
     }
     if (this.x < PLAYER_SIZE.HALF_WIDTH) {
       this.x = PLAYER_SIZE.HALF_WIDTH
-    } else if (this.x > MAP.WIDTH - PLAYER_SIZE.HALF_WIDTH) {
-      this.x = MAP.WIDTH - PLAYER_SIZE.HALF_WIDTH
+    } else if (this.x > map.width - PLAYER_SIZE.HALF_WIDTH) {
+      this.x = map.width - PLAYER_SIZE.HALF_WIDTH
     }
     if (this.y < PLAYER_SIZE.HALF_HEIGHT) {
       this.y = PLAYER_SIZE.HALF_HEIGHT
-    } else if (this.y > MAP.HEIGHT - PLAYER_SIZE.HALF_HEIGHT) {
-      this.y = MAP.HEIGHT - PLAYER_SIZE.HALF_HEIGHT
+    } else if (this.y > map.height - PLAYER_SIZE.HALF_HEIGHT) {
+      this.y = map.height - PLAYER_SIZE.HALF_HEIGHT
     }
   }
 
@@ -181,10 +181,12 @@ export default class Player {
     ctx.fillStyle = '#ffffff'
     ctx.fillText(this.userName, 0, -PLAYER_SIZE.HALF_HEIGHT)
 
-    ctx.translate(0, -WINDOW_HEIGHT / 2)
-    ctx.fillText(`bullet: ${this.bulletCount}/${this.bulletTotal} score: ${this.score}`, 0, 12)
-    ctx.textAlign = 'left'
-    ctx.fillText(`x:${this.x} y:${this.y}`, -WINDOW_WIDTH / 2, 12)
+    if (this.isSelf) {
+      ctx.translate(0, -WINDOW_HEIGHT / 2)
+      ctx.fillText(`bullet: ${this.bulletCount}/${this.bulletTotal} score: ${this.score}`, 0, 12)
+      ctx.textAlign = 'left'
+      ctx.fillText(`x:${this.x} y:${this.y}`, -WINDOW_WIDTH / 2, 12)
+    }
 
     ctx.restore()
 

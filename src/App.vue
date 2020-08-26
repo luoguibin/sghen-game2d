@@ -26,8 +26,8 @@ export default {
       }
       localStorage.setItem('login', 1)
       window.location.href =
-          'https://www.sghen.cn/sghen-wap/index.html#/login?redirect=' +
-          encodeURIComponent(window.location.href)
+        'https://www.sghen.cn/sghen-wap/index.html#/login?redirect=' +
+        encodeURIComponent(window.location.href)
       return
     }
     this.gameMain = new GameMain(this.$refs.canvas, userInfo)

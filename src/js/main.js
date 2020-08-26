@@ -3,10 +3,9 @@ import {
   WINDOW_WIDTH,
   WINDOW_HEIGHT,
   CANVAS_WIDTH,
-  CANVAS_HEIGHT,
-  MAP
+  CANVAS_HEIGHT
 } from './const'
-import { ORDER } from './order'
+import { ACTION, PLAYER, SKILL, SYSTEM, newOrder } from './order'
 import DirectionView from './direction-view'
 import Player from './player'
 
@@ -17,9 +16,11 @@ export default class Main {
   /**
    * @param {HTMLCanvasElement} canvas
    */
-  constructor (canvas, { id, token, username }) {
-    this.id = id
+  constructor (canvas, { token }) {
+    this.id = -1
+    this.userName = ''
     this.token = token
+    this.gameMap = null
 
     // 抗锯齿
     canvas.setAttribute('width', CANVAS_WIDTH)
@@ -44,16 +45,10 @@ export default class Main {
     canvas.addEventListener('touchmove', this.touchHandler)
     canvas.addEventListener('touchend', this.touchHandler)
 
-    // 初始化登录的玩家
-    this.player = new Player(id, username)
-
     this.players = []
     this.obstacles = []
-
     this.directionView = new DirectionView()
     this.touchIdentifier = null
-
-    this.restart()
 
     this.initWS()
   }
@@ -61,10 +56,6 @@ export default class Main {
   initWS () {
     const wsUrl = 'wss://www.sghen.cn/ggapi/auth/game2d?token=' + this.token
     // const wsUrl = 'ws://10.48.84.235:8282/auth/game2d?token=' + this.token
-
-    if (this.heartTimer) {
-      clearInterval(this.heartTimer)
-    }
 
     const socket = new WebSocket(wsUrl)
     socket.addEventListener('open', () => {
@@ -81,7 +72,10 @@ export default class Main {
     if (!this.ws) {
       return
     }
-    o.userId = this.id
+    if (!o.fromId) {
+      o.fromId = this.id
+    }
+    o.sceneId = this.gameMap.id
     this.ws.send(JSON.stringify(o))
   }
 
@@ -89,20 +83,81 @@ export default class Main {
     if (!msg) {
       return
     }
-    const { id, userId, data } = JSON.parse(msg)
-    const player = this.players.find(o => o.id === userId)
+    const { id, fromId, data } = JSON.parse(msg)
+    const player = this.players.find(o => o.id === fromId)
 
     switch (id) {
-      case ORDER.MOVE_START:
-        player.walk(data)
+      case PLAYER.LOGIN:
+        // 初始化登录的玩家
+        this.id = data.id
+        this.userName = data.username
+        this.player = new Player(this.id, this.userName)
+        this.player.obstacleCall = this.obstacleCall.bind(this)
+        this.player.isSelf = true
         break
-      case ORDER.MOVE_STOP:
+      case PLAYER.LOGOUT: {
+        const ids = data || []
+        ids.forEach(v => {
+          const players = this.players
+          for (let i = players.length - 1; i >= 0; i--) {
+            players[i].id === v && players.splice(i, 1)
+          }
+        })
+      }
+        break
+      case ACTION.ENTER_MAP:
+        if (fromId === SYSTEM.GOD) {
+          // 用户进入场景，并获取到场景中的用户列表
+          this.gameMap = data.map
+          this.players = [this.player]
+          this.restart()
+          const selfId = this.player.id
+          data.players.forEach(o => {
+            if (o.id !== selfId) {
+              const newPlayer = new Player(o.id, o.username)
+              newPlayer.obstacleCall = this.obstacleCall.bind(this)
+              if (o.actionOrder) {
+                const { orderId, data } = o.actionOrder
+                if (data.x !== undefined) {
+                  newPlayer.x = data.x
+                  newPlayer.y = data.y
+                }
+                if (orderId === ACTION.MOVING) {
+                  newPlayer.walk(data.direction)
+                }
+              }
+
+              this.players.push(newPlayer)
+            }
+          })
+          data.obstacles.forEach(o => {
+            const obstacle = {
+              id: o.id,
+              x: o.x,
+              y: o.y,
+              type: o.type,
+              value: o.value
+            }
+            this.obstacles.push(obstacle)
+          })
+        } else {
+          const newPlayer = new Player(data.id, data.username)
+          newPlayer.obstacleCall = this.obstacleCall.bind(this)
+          this.players.push(newPlayer)
+        }
+        break
+      case ACTION.MOVING:
+        player.x = data.x
+        player.y = data.y
+        player.walk(data.direction)
+        break
+      case ACTION.IDEL:
         player.walk(-1)
         break
-      case ORDER.SKILL_BEGIN:
+      case SKILL.START:
         player.startNextSkill0()
         break
-      case ORDER.SKILL_HIT: {
+      case SKILL.HIT: {
         const { obstacleId, skillId } = data
         console.log('SKILL_HIT', obstacleId, skillId)
         const index = this.obstacles.findIndex(o => o.id === obstacleId)
@@ -120,30 +175,16 @@ export default class Main {
         player.newHit(obstacle, skillId)
       }
         break
-      case ORDER.LOGIN:
-        if (this.id === userId) {
-          this.players.push(this.player)
-          this.player.obstacleCall = this.obstacleCall.bind(this)
-          this.heartTimer = setInterval(() => {
-            this.sendMsg({ id: ORDER.HEART_BEAT })
-          }, 5000)
-        } else {
-          const { id, username } = data
-          const newPlayer = new Player(id, username)
-          newPlayer.obstacleCall = this.obstacleCall.bind(this)
-          this.players.push(newPlayer)
-        }
-        break
-      case ORDER.LOGIN_RECONNECT:
-        if (this.id === userId) {
-          if (this.players.findIndex(o => o === this.player) === -1) {
-            this.players.push(this.player)
-            this.player.obstacleCall = this.obstacleCall.bind(this)
-            this.heartTimer = setInterval(() => {
-              this.sendMsg({ id: ORDER.HEART_BEAT })
-            }, 5000)
-          }
-        }
+      case SYSTEM.OBSTACLE:
+        data.forEach(o => {
+          this.obstacles.push({
+            id: o.id,
+            x: o.x,
+            y: o.y,
+            type: o.type,
+            value: o.value
+          })
+        })
         break
       default:
         break
@@ -153,8 +194,14 @@ export default class Main {
   restart () {
     // 清除上一局的动画
     window.cancelAnimationFrame(this.aniId)
-
     this.aniId = window.requestAnimationFrame(this.bindLoop)
+
+    if (this.heartId) {
+      clearInterval(this.heartId)
+    }
+    this.heartId = setInterval(() => {
+      this.sendMsg(newOrder(PLAYER.HEART))
+    }, 8000)
   }
 
   /**
@@ -176,10 +223,10 @@ export default class Main {
                   return
                 }
                 this.preWalkValue = value
-                this.sendMsg({ id: ORDER.MOVE_START, data: value })
+                this.sendMsg(newOrder(ACTION.MOVING, this.player.id, { direction: value, x: this.player.x, y: this.player.y }))
               }
             } else {
-              this.sendMsg({ id: ORDER.SKILL_BEGIN })
+              this.sendMsg(newOrder(SKILL.START))
             }
           }
         }
@@ -200,7 +247,7 @@ export default class Main {
                 return
               }
               this.preWalkValue = value
-              this.sendMsg({ id: ORDER.MOVE_START, data: value })
+              this.sendMsg(newOrder(ACTION.MOVING, this.player.id, { direction: value, x: this.player.x, y: this.player.y }))
             }
             break
           }
@@ -215,7 +262,7 @@ export default class Main {
           if ((index === -1 || touches.length === 0) && this.touchIdentifier !== null) {
             this.touchIdentifier = null
             this.preWalkValue = null
-            this.sendMsg({ id: ORDER.MOVE_STOP })
+            this.sendMsg(newOrder(ACTION.IDEL, this.player.id, { x: this.player.x, y: this.player.y }))
           }
         }
         break
@@ -236,19 +283,14 @@ export default class Main {
     ctx.translate(-cameraX, -cameraY)
 
     ctx.fillStyle = '#ffffff'
-    // for (let i = 0; i < 10; i++) {
-    //   for (let j = 0; j < 10; j++) {
-    //     ctx.fillText(`${i}-${j}`, i * MAP.WIDTH / 10, j * MAP.HEIGHT / 10 + 12)
-    //   }
-    // }
 
     // 地图边框
     ctx.strokeStyle = '#00ff00'
     ctx.beginPath()
     ctx.moveTo(0, 0)
-    ctx.lineTo(MAP.WIDTH, 0)
-    ctx.lineTo(MAP.WIDTH, MAP.HEIGHT)
-    ctx.lineTo(0, MAP.HEIGHT)
+    ctx.lineTo(this.gameMap.width, 0)
+    ctx.lineTo(this.gameMap.width, this.gameMap.height)
+    ctx.lineTo(0, this.gameMap.height)
     ctx.closePath()
     ctx.stroke()
 
@@ -274,26 +316,17 @@ export default class Main {
   }
 
   obstacleCall (obstacle, skill, player) {
-    this.sendMsg({ id: ORDER.SKILL_HIT, userId: player.id, data: { obstacleId: obstacle.id, skillId: skill.id } })
+    const order = newOrder(SKILL.HIT, skill.id, { obstacleId: obstacle.id, skillId: skill.id })
+    order.fromId = player.id
+    this.sendMsg(order)
   }
 
   // 游戏逻辑更新主函数
   update () {
     this.players.forEach(o => {
-      o.update(MAP)
+      o.update(this.gameMap)
       o.updateSkill(this.obstacles)
     })
-
-    if (this.obstacles.length < 10) {
-      const obstacle = {
-        id: Date.now(),
-        x: Math.random() * MAP.WIDTH >> 0,
-        y: Math.random() * MAP.HEIGHT >> 0,
-        type: Math.random() < 0.1 ? 'add' : Math.random() < 0.1 ? 'add-all' : 'show',
-        value: (Math.random() * 8 >> 0) + 18
-      }
-      this.obstacles.push(obstacle)
-    }
   }
 
   // 实现游戏帧循环

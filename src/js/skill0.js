@@ -1,9 +1,8 @@
 import {
-  PIXEL_RATIO,
   WINDOW_HEIGHT
 } from './const'
 
-const STEP = PIXEL_RATIO * 3
+const STEP = 6
 
 const SKILL_WIDTH = 30
 const SKILL_HEIGHT = 52
