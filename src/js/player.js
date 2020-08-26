@@ -64,10 +64,10 @@ export default class Player {
     const index = skills.findIndex(o => o.id === skillId)
     const skill = skills.splice(index, 1)[0]
     if (!skill) {
+      console.log('empty skill', skillId, obstacle)
       return
     }
     this.addBullet(1)
-
     const skill1 = new Skill1(obstacle.x, obstacle.y)
     this.skills.push(skill1)
   }
@@ -79,9 +79,9 @@ export default class Player {
     this.bulletCount = Math.min(this.bulletTotal, this.bulletCount)
   }
 
-  startNextSkill0 () {
+  startNextSkill0 (maxDistance) {
     if (this.bulletCount > 0) {
-      const skill0 = new Skill0(this.x, this.y, this.direction)
+      const skill0 = new Skill0(this.x, this.y, this.direction, maxDistance)
       this.skills.push(skill0)
       this.addBullet(-1)
     }
@@ -90,6 +90,9 @@ export default class Player {
   updateSkill (obstacles) {
     const skills = this.skills
     for (let i = skills.length - 1; i >= 0; i--) {
+      if (skills[i].isLocked) {
+        continue
+      }
       if (skills[i].isEnd) {
         skills.splice(i, 1)
         this.addBullet(1)
@@ -109,6 +112,8 @@ export default class Player {
           if (d < obstacle.value + 15) {
             obstacle.isLocked = true
             this.obstacleCall(obstacle, skill, this)
+            skills[i].isLocked = true
+            break
           }
         }
       }

@@ -155,7 +155,7 @@ export default class Main {
         player.walk(-1)
         break
       case SKILL.START:
-        player.startNextSkill0()
+        player.startNextSkill0(Math.max(this.gameMap.width, this.gameMap.height) * 1.5)
         break
       case SKILL.HIT: {
         const { obstacleId, skillId } = data
@@ -316,6 +316,10 @@ export default class Main {
   }
 
   obstacleCall (obstacle, skill, player) {
+    if (player !== this.player) {
+      // 非自身用户不进行碰撞指令发送
+      return
+    }
     const order = newOrder(SKILL.HIT, skill.id, { obstacleId: obstacle.id, skillId: skill.id })
     order.fromId = player.id
     this.sendMsg(order)
@@ -323,7 +327,9 @@ export default class Main {
 
   // 游戏逻辑更新主函数
   update () {
-    this.players.forEach(o => {
+    this.players.sort(function (o1, o2) {
+      return o1.x - o2.x && o1.y - o2.y
+    }).forEach(o => {
       o.update(this.gameMap)
       o.updateSkill(this.obstacles)
     })

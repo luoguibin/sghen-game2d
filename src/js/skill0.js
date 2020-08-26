@@ -1,9 +1,4 @@
-import {
-  WINDOW_HEIGHT
-} from './const'
-
 const STEP = 6
-
 const SKILL_WIDTH = 30
 const SKILL_HEIGHT = 52
 const SKILL_SIZE = {
@@ -32,7 +27,7 @@ export const SKILL_DIRECTION = {
 }
 
 export default class Skill0 {
-  constructor (x, y, direction) {
+  constructor (x, y, direction, maxDistance) {
     this.id = Date.now()
     this.img = new Image()
     this.img.src = require('@/images/bullet.png')
@@ -41,6 +36,7 @@ export default class Skill0 {
     this.x = x
     this.y = y
     this.stepValue = 0
+    this.maxDistance = maxDistance || 2000
     this.isEnd = false
     this.isBullet = true
   }
@@ -63,7 +59,7 @@ export default class Skill0 {
       default:
         break
     }
-    if (this.stepValue > WINDOW_HEIGHT * 2) {
+    if (this.stepValue > this.maxDistance) {
       this.isEnd = true
     }
   }
