@@ -5,7 +5,10 @@
     <div :class="{'msg-box': true, 'box-hidden': !msgVisible }">
       <div v-show="msgVisible" class="flex-one">
         <div class="scroll">
-          <div v-for="item in msgs" :key="item.id" class="msg-item"><span>{{item.fromName}}:</span>{{item.content}}</div>
+          <div v-for="item in msgs" :key="item.id" class="msg-item">
+            <span>{{item.fromName}}:</span>
+            {{item.content}}
+          </div>
         </div>
       </div>
       <div v-show="msgVisible" class="msg-input">
@@ -26,7 +29,7 @@ export default {
   data () {
     return {
       msgs: [],
-      msgVisible: true,
+      msgVisible: false,
       msgText: ''
     }
   },
@@ -43,8 +46,10 @@ export default {
       }
       localStorage.setItem('login', 1)
       window.location.href =
-          'https://www.sghen.cn/sghen-wap/index.html#/login?redirect=' +
-          encodeURIComponent(window.location.href) + '&rand=' + Date.now()
+        'https://www.sghen.cn/sghen-wap/index.html#/login?redirect=' +
+        encodeURIComponent(window.location.href) +
+        '&rand=' +
+        Date.now()
       return
     }
     this.gameMain = new GameMain(this.$refs.canvas, userInfo)
@@ -109,7 +114,7 @@ canvas {
   position: absolute;
   bottom: 0;
   right: 0;
-  width: 60%;
+  width: 100%;
   height: 50%;
   display: flex;
   flex-direction: column;
@@ -125,6 +130,8 @@ canvas {
 }
 .msg-box .scroll {
   height: 100%;
+  padding: 0 0.3rem;
+  box-sizing: border-box;
   overflow-y: auto;
 }
 .msg-item {
@@ -138,11 +145,19 @@ canvas {
 .msg-input {
   display: flex;
   flex-direction: row;
-  padding: 8px 0;
+  padding: 0.5rem 0.3rem;
+  box-sizing: border-box;
   border-top: 1px solid black;
 }
 .msg-input input {
   display: inline-block;
+  outline: none;
+  border: none;
+}
+.msg-input button {
+  min-width: 1rem;
+  border: none;
+  padding: 0 0.3rem;
 }
 .block {
   display: block;

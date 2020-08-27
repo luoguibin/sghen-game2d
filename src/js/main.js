@@ -256,6 +256,8 @@ export default class Main {
    * @param {TouchEvent} e
    */
   touchEventHandler (e) {
+    e.preventDefault()
+    e.stopPropagation()
     switch (e.type) {
       case 'touchstart': {
         const touches = e.touches
@@ -309,7 +311,6 @@ export default class Main {
           if ((index === -1 || touches.length === 0) && this.touchIdentifier !== null) {
             this.touchIdentifier = null
             this.preWalkValue = null
-            console.log(this.player.x, this.player.y)
             this.sendMsg(newOrder(ACTION.IDEL, this.player.id, { x: this.player.x, y: this.player.y }))
           }
         }
