@@ -1,4 +1,4 @@
-const STEP = 6
+const STEP = 12
 const SKILL_WIDTH = 30
 const SKILL_HEIGHT = 52
 const SKILL_SIZE = {

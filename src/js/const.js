@@ -8,9 +8,7 @@ export const CANVAS_WIDTH = PIXEL_RATIO * WINDOW_WIDTH
 export const CANVAS_HEIGHT = PIXEL_RATIO * WINDOW_HEIGHT
 
 /**
- * 地图大小
+ * socket地址
  */
-export const MAP = {
-  WIDTH: WINDOW_WIDTH * 5,
-  HEIGHT: WINDOW_HEIGHT * 3
-}
+export const WS_URL = 'wss://www.sghen.cn/ggapi/auth/game2d'
+// export const WS_URL = 'ws://10.48.84.235:8282/auth/game2d'

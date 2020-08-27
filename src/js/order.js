@@ -12,9 +12,10 @@ export const SKILL = {
 
 export const PLAYER = {
   LOGIN: -3000,
-  LOGOUT: -3001,
-  ALL: -3002,
-  HEART: -3003
+  RECONNECT: -3001,
+  LOGOUT: -3002,
+  ALL: -3003,
+  HEART: -3004
 }
 
 export const SYSTEM = {

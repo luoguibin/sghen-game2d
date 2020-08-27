@@ -1,4 +1,5 @@
 import {
+  WS_URL,
   PIXEL_RATIO,
   WINDOW_WIDTH,
   WINDOW_HEIGHT,
@@ -16,8 +17,8 @@ export default class Main {
   /**
    * @param {HTMLCanvasElement} canvas
    */
-  constructor (canvas, { token }) {
-    this.id = -1
+  constructor (canvas, { id, token }) {
+    this.id = id
     this.userName = ''
     this.token = token
     this.gameMap = null
@@ -54,10 +55,7 @@ export default class Main {
   }
 
   initWS () {
-    const wsUrl = 'wss://www.sghen.cn/ggapi/auth/game2d?token=' + this.token
-    // const wsUrl = 'ws://10.48.84.235:8282/auth/game2d?token=' + this.token
-
-    const socket = new WebSocket(wsUrl)
+    const socket = new WebSocket(`${WS_URL}?token=${this.token}`)
     socket.addEventListener('open', () => {
       console.log('socket is open')
       this.ws = socket
@@ -84,21 +82,34 @@ export default class Main {
       return
     }
     const { id, fromId, data } = JSON.parse(msg)
-    const player = this.players.find(o => o.id === fromId)
+    const players = this.players
+    const fromPlayer = players.find(o => o.id === fromId)
 
     switch (id) {
-      case PLAYER.LOGIN:
+      case PLAYER.RECONNECT:
+      case PLAYER.LOGIN: {
         // 初始化登录的玩家
         this.id = data.id
         this.userName = data.username
-        this.player = new Player(this.id, this.userName)
-        this.player.obstacleCall = this.obstacleCall.bind(this)
-        this.player.isSelf = true
+        const newPlayer = new Player(this.id, this.userName)
+        if (data.actionOrder) {
+          const position = data.actionOrder.data
+          if (position.x !== undefined) {
+            newPlayer.x = position.x
+            newPlayer.y = position.y
+          }
+          if (data.actionOrder.id === ACTION.MOVING) {
+            newPlayer.walk(data.direction)
+          }
+        }
+        newPlayer.obstacleCall = this.obstacleCall.bind(this)
+        newPlayer.isSelf = true
+        this.player = newPlayer
+      }
         break
       case PLAYER.LOGOUT: {
         const ids = data || []
         ids.forEach(v => {
-          const players = this.players
           for (let i = players.length - 1; i >= 0; i--) {
             players[i].id === v && players.splice(i, 1)
           }
@@ -141,21 +152,44 @@ export default class Main {
             this.obstacles.push(obstacle)
           })
         } else {
+          if (fromPlayer) {
+            if (data.actionOrder) {
+              const position = data.actionOrder.data
+              if (position.x !== undefined) {
+                fromPlayer.x = position.x
+                fromPlayer.y = position.y
+              }
+              if (data.actionOrder.id === ACTION.MOVING) {
+                fromPlayer.walk(data.direction)
+              }
+            }
+            return
+          }
           const newPlayer = new Player(data.id, data.username)
           newPlayer.obstacleCall = this.obstacleCall.bind(this)
+          if (data.actionOrder) {
+            const position = data.actionOrder.data
+            if (position.x !== undefined) {
+              newPlayer.x = position.x
+              newPlayer.y = position.y
+            }
+            if (data.actionOrder.id === ACTION.MOVING) {
+              newPlayer.walk(data.direction)
+            }
+          }
           this.players.push(newPlayer)
         }
         break
       case ACTION.MOVING:
-        player.x = data.x
-        player.y = data.y
-        player.walk(data.direction)
+        fromPlayer.x = data.x
+        fromPlayer.y = data.y
+        fromPlayer.walk(data.direction)
         break
       case ACTION.IDEL:
-        player.walk(-1)
+        fromPlayer.walk(-1)
         break
       case SKILL.START:
-        player.startNextSkill0(Math.max(this.gameMap.width, this.gameMap.height) * 1.5)
+        fromPlayer.startNextSkill0(Math.max(this.gameMap.width, this.gameMap.height) * 1.5)
         break
       case SKILL.HIT: {
         const { obstacleId, skillId } = data
@@ -167,12 +201,12 @@ export default class Main {
           return
         }
         if (obstacle.type === 'add') {
-          player.addBullet(obstacle.value)
+          fromPlayer.addBullet(obstacle.value)
         } else if (obstacle.type === 'add-all') {
-          player.addBullet(obstacle.value, 1)
+          fromPlayer.addBullet(obstacle.value, 1)
         }
-        player.addScore(obstacle.value)
-        player.newHit(obstacle, skillId)
+        fromPlayer.addScore(obstacle.value)
+        fromPlayer.newHit(obstacle, skillId)
       }
         break
       case SYSTEM.OBSTACLE:
@@ -262,6 +296,7 @@ export default class Main {
           if ((index === -1 || touches.length === 0) && this.touchIdentifier !== null) {
             this.touchIdentifier = null
             this.preWalkValue = null
+            console.log(this.player.x, this.player.y)
             this.sendMsg(newOrder(ACTION.IDEL, this.player.id, { x: this.player.x, y: this.player.y }))
           }
         }
