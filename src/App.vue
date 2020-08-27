@@ -5,10 +5,7 @@
     <div :class="{'msg-box': true, 'box-hidden': !msgVisible }">
       <div v-show="msgVisible" class="flex-one">
         <div class="scroll">
-          <div v-for="item in msgs" :key="item.id" class="msg-item">
-            <span>{{item.fromName}}:</span>
-            {{item.content}}
-          </div>
+          <div v-for="item in msgs" :key="item.id" class="msg-item"><span>{{item.fromName}}:</span>{{item.content}}</div>
         </div>
       </div>
       <div v-show="msgVisible" class="msg-input">
@@ -36,8 +33,8 @@ export default {
 
   mounted () {
     window.app = this
-    const temp = localStorage.getItem('sghen_user_info') || 'e30=' // btoa('{}') => 'e30='
-    const userInfo = JSON.parse(window.decodeURIComponent(window.atob(temp)))
+    const temp = localStorage.getItem('sghen_user_info') || ''
+    const userInfo = JSON.parse(window.decodeURIComponent(window.atob(temp)) || '{}')
     if (!userInfo || !userInfo.token) {
       if (localStorage.getItem('login')) {
         alert('登录失败，请手动刷新界面')
@@ -46,10 +43,8 @@ export default {
       }
       localStorage.setItem('login', 1)
       window.location.href =
-        'https://www.sghen.cn/sghen-wap/index.html#/login?redirect=' +
-        encodeURIComponent(window.location.href) +
-        '&rand=' +
-        Date.now()
+          'https://www.sghen.cn/sghen-wap/index.html#/login?redirect=' +
+          encodeURIComponent(window.location.href) + '&rand=' + Date.now()
       return
     }
     this.gameMain = new GameMain(this.$refs.canvas, userInfo)
