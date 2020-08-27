@@ -20,7 +20,8 @@ export const PLAYER = {
 
 export const SYSTEM = {
   GOD: -4000,
-  OBSTACLE: -4001
+  OBSTACLE: -4001,
+  MESSAGE: -4002
 }
 
 export const newOrder = function (id, toId, data) {

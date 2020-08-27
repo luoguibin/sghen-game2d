@@ -1,6 +1,19 @@
 <template>
   <div class="app">
     <canvas ref="canvas"></canvas>
+
+    <div :class="{'msg-box': true, 'box-hidden': !msgVisible }">
+      <div v-show="msgVisible" class="flex-one">
+        <div class="scroll">
+          <div v-for="item in msgs" :key="item.id" class="msg-item"><span>{{item.fromName}}:</span>{{item.content}}</div>
+        </div>
+      </div>
+      <div v-show="msgVisible" class="msg-input">
+        <input class="flex-one" v-model="msgText" />
+        <button @click="onSendMsg">发送</button>
+      </div>
+      <button class="block" @click="onToggleMsg">{{msgVisible ? '收起' : '聊天'}}</button>
+    </div>
   </div>
 </template>
 
@@ -11,7 +24,11 @@ export default {
   name: 'App',
 
   data () {
-    return {}
+    return {
+      msgs: [],
+      msgVisible: true,
+      msgText: ''
+    }
   },
 
   mounted () {
@@ -26,11 +43,12 @@ export default {
       }
       localStorage.setItem('login', 1)
       window.location.href =
-        'https://www.sghen.cn/sghen-wap/index.html#/login?redirect=' +
-        encodeURIComponent(window.location.href)
+          'https://www.sghen.cn/sghen-wap/index.html#/login?redirect=' +
+          encodeURIComponent(window.location.href) + '&rand=' + Date.now()
       return
     }
     this.gameMain = new GameMain(this.$refs.canvas, userInfo)
+    this.gameMain.msgCall = this.msgCall.bind(this)
 
     document.oncontextmenu = function () {
       return false
@@ -45,6 +63,27 @@ export default {
         passive: false
       }
     )
+  },
+
+  methods: {
+    msgCall (o) {
+      this.msgs.push(o)
+      if (this.msgs.length > 100) {
+        this.msgs.shift()
+      }
+    },
+
+    onToggleMsg () {
+      this.msgVisible = !this.msgVisible
+    },
+
+    onSendMsg () {
+      if (!this.msgText) {
+        return
+      }
+      this.gameMain.sendText(this.msgText)
+      this.msgText = ''
+    }
   }
 }
 </script>
@@ -65,5 +104,50 @@ canvas {
   width: 100%;
   height: 100%;
   background-color: black;
+}
+.msg-box {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 60%;
+  height: 50%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background-color: rgb(255, 255, 255);
+}
+.box-hidden {
+  width: 100px;
+  max-height: 2rem;
+}
+.msg-box .flex-one {
+  flex: 1;
+}
+.msg-box .scroll {
+  height: 100%;
+  overflow-y: auto;
+}
+.msg-item {
+  margin-bottom: 0.3rem;
+  word-break: break-all;
+}
+.msg-item span {
+  font-weight: bold;
+  padding-right: 3px;
+}
+.msg-input {
+  display: flex;
+  flex-direction: row;
+  padding: 8px 0;
+  border-top: 1px solid black;
+}
+.msg-input input {
+  display: inline-block;
+}
+.block {
+  display: block;
+  width: 100%;
+  line-height: 2rem;
+  text-align: center;
 }
 </style>

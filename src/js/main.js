@@ -51,6 +51,8 @@ export default class Main {
     this.directionView = new DirectionView()
     this.touchIdentifier = null
 
+    this.msgCall = function () {}
+
     this.initWS()
   }
 
@@ -75,6 +77,10 @@ export default class Main {
     }
     o.sceneId = this.gameMap.id
     this.ws.send(JSON.stringify(o))
+  }
+
+  sendText (text) {
+    this.sendMsg(newOrder(SYSTEM.MESSAGE, PLAYER.ALL, text))
   }
 
   dealMsg (msg) {
@@ -218,6 +224,13 @@ export default class Main {
             type: o.type,
             value: o.value
           })
+        })
+        break
+      case SYSTEM.MESSAGE:
+        this.msgCall({
+          id: Date.now(),
+          fromName: fromPlayer.userName,
+          content: data
         })
         break
       default:
