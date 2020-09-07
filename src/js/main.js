@@ -251,7 +251,7 @@ export default class Main {
         score: o.score
       }
     }).sort(function (o0, o1) {
-      return o0.score - o1.score
+      return o1.score - o0.score
     }))
   }
 

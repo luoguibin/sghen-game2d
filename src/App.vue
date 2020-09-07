@@ -47,7 +47,7 @@ export default {
     window.app = this
     const temp = localStorage.getItem('sghen_user_info') || ''
     const userInfo = JSON.parse(window.decodeURIComponent(window.atob(temp)) || '{}')
-    if (!userInfo || !userInfo.token) {
+    if (!userInfo || !userInfo.token || !userInfo.timeLogin || (Date.now() - userInfo.timeLogin > 3600)) {
       if (localStorage.getItem('login')) {
         alert('登录失败，请手动刷新界面')
         localStorage.removeItem('login')
@@ -59,6 +59,7 @@ export default {
           encodeURIComponent(window.location.href) + '&rand=' + Date.now()
       return
     }
+
     this.gameMain = new GameMain(this.$refs.canvas, userInfo)
     this.gameMain.msgCall = this.msgCall.bind(this)
     this.gameMain.scoreCall = this.scoreCall.bind(this)
@@ -70,6 +71,7 @@ export default {
       'touchmove',
       function (e) {
         e.preventDefault()
+        e.stopPropagation()
         return false
       },
       {
