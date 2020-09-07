@@ -47,16 +47,16 @@ export default {
     window.app = this
     const temp = localStorage.getItem('sghen_user_info') || ''
     const userInfo = JSON.parse(window.decodeURIComponent(window.atob(temp)) || '{}')
-    if (!userInfo || !userInfo.token || !userInfo.timeLogin || (Date.now() - userInfo.timeLogin > 3600)) {
+    if (!userInfo || !userInfo.token || !userInfo.timeLogin || (Date.now() - userInfo.timeLogin / 1000 > 3600)) {
       if (localStorage.getItem('login')) {
         alert('登录失败，请手动刷新界面')
         localStorage.removeItem('login')
         return
       }
       localStorage.setItem('login', 1)
-      window.location.href =
-          'https://www.sghen.cn/sghen-wap/index.html#/login?redirect=' +
-          encodeURIComponent(window.location.href) + '&rand=' + Date.now()
+      // window.location.href =
+      //     'https://www.sghen.cn/sghen-wap/index.html#/login?redirect=' +
+      //     encodeURIComponent(window.location.href) + '&rand=' + Date.now()
       return
     }
 
