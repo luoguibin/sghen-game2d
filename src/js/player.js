@@ -111,8 +111,8 @@ export default class Player {
           const d = getDistance(obstacle.x, obstacle.y, skill.x, skill.y)
           if (d < obstacle.value + 15) {
             obstacle.isLocked = true
-            this.obstacleCall(obstacle, skill, this)
             skills[i].isLocked = true
+            this.obstacleCall(obstacle, skill, this)
             break
           }
         }

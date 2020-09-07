@@ -52,6 +52,7 @@ export default class Main {
     this.touchIdentifier = null
 
     this.msgCall = function () {}
+    this.scoreCall = function () {}
 
     this.initWS()
   }
@@ -197,23 +198,8 @@ export default class Main {
       case SKILL.START:
         fromPlayer.startNextSkill0(Math.max(this.gameMap.width, this.gameMap.height) * 1.5)
         break
-      case SKILL.HIT: {
-        const { obstacleId, skillId } = data
-        console.log('SKILL_HIT', obstacleId, skillId)
-        const index = this.obstacles.findIndex(o => o.id === obstacleId)
-        const obstacle = this.obstacles.splice(index, 1)[0]
-        if (!obstacle) {
-          console.log('empty obstacle')
-          return
-        }
-        if (obstacle.type === 'add') {
-          fromPlayer.addBullet(obstacle.value)
-        } else if (obstacle.type === 'add-all') {
-          fromPlayer.addBullet(obstacle.value, 1)
-        }
-        fromPlayer.addScore(obstacle.value)
-        fromPlayer.newHit(obstacle, skillId)
-      }
+      case SKILL.HIT:
+        this.handleHit(fromPlayer, data)
         break
       case SYSTEM.OBSTACLE:
         data.forEach(o => {
@@ -236,6 +222,37 @@ export default class Main {
       default:
         break
     }
+  }
+
+  handleHit (player, data, isLocal) {
+    if (!isLocal && player.id === this.player.id) {
+      return
+    }
+    const { obstacleId, skillId } = data
+    console.log('SKILL_HIT', obstacleId, skillId)
+    const index = this.obstacles.findIndex(o => o.id === obstacleId)
+    const obstacle = this.obstacles.splice(index, 1)[0]
+    if (!obstacle) {
+      console.log('empty obstacle')
+      return
+    }
+    if (obstacle.type === 'add') {
+      player.addBullet(obstacle.value)
+    } else if (obstacle.type === 'add-all') {
+      player.addBullet(obstacle.value, 1)
+    }
+    player.addScore(obstacle.value)
+    player.newHit(obstacle, skillId)
+
+    this.scoreCall(this.players.map(o => {
+      return {
+        id: o.id,
+        userName: o.userName,
+        score: o.score
+      }
+    }).sort(function (o0, o1) {
+      return o0.score - o1.score
+    }))
   }
 
   restart () {
@@ -372,6 +389,7 @@ export default class Main {
     const order = newOrder(SKILL.HIT, skill.id, { obstacleId: obstacle.id, skillId: skill.id })
     order.fromId = player.id
     this.sendMsg(order)
+    this.handleHit(this.player, order.data, true)
   }
 
   // 游戏逻辑更新主函数

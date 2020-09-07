@@ -14,6 +14,15 @@
       </div>
       <button class="block" @click="onToggleMsg">{{msgVisible ? '收起' : '聊天'}}</button>
     </div>
+
+    <div :class="{'msg-box': true, 'box-hidden': !scoreVisible, 'score-box': !scoreVisible }">
+      <div v-show="scoreVisible" class="flex-one">
+        <div class="scroll">
+          <div v-for="item in players" :key="item.id" class="msg-item"><span>{{item.userName}}:</span>{{item.score}}</div>
+        </div>
+      </div>
+      <button class="block" @click="onToggleScore">{{scoreVisible ? '收起' : '排行榜'}}</button>
+    </div>
   </div>
 </template>
 
@@ -27,7 +36,10 @@ export default {
     return {
       msgs: [],
       msgVisible: false,
-      msgText: ''
+      msgText: '',
+
+      players: [],
+      scoreVisible: false
     }
   },
 
@@ -49,6 +61,7 @@ export default {
     }
     this.gameMain = new GameMain(this.$refs.canvas, userInfo)
     this.gameMain.msgCall = this.msgCall.bind(this)
+    this.gameMain.scoreCall = this.scoreCall.bind(this)
 
     document.oncontextmenu = function () {
       return false
@@ -72,17 +85,22 @@ export default {
         this.msgs.shift()
       }
     },
-
     onToggleMsg () {
       this.msgVisible = !this.msgVisible
     },
-
     onSendMsg () {
       if (!this.msgText) {
         return
       }
       this.gameMain.sendText(this.msgText)
       this.msgText = ''
+    },
+
+    scoreCall (players) {
+      this.players = players || []
+    },
+    onToggleScore () {
+      this.scoreVisible = !this.scoreVisible
     }
   }
 }
@@ -107,7 +125,7 @@ canvas {
 }
 .msg-box {
   position: absolute;
-  bottom: 0;
+  top: 0;
   right: 0;
   width: 100%;
   height: 50%;
@@ -115,6 +133,9 @@ canvas {
   flex-direction: column;
   overflow: hidden;
   background-color: rgb(255, 255, 255);
+}
+.score-box {
+  top: 2rem;
 }
 .box-hidden {
   width: 100px;
