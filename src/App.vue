@@ -45,15 +45,17 @@ export default {
 
   mounted () {
     window.app = this
-    const temp = localStorage.getItem('sghen_user_info') || ''
+    const temp = localStorage.getItem('sghen_user_info') || 'JTdCJTIyaWQlMjIlM0ExNjQwNSUyQyUyMmFjY291bnQlMjIlM0ElMjJvbjNULTQzaVliNy15ZlB6cTdZVzJMOGVJbVdvJTIyJTJDJTIycGhvbmUlMjIlM0ElMjIxNTYyNTA0NTk4NCUyMiUyQyUyMnRva2VuJTIyJTNBJTIyZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SmxlSEFpT2pFMk1EQTBNREF6TnpRc0ltbGhkQ0k2TVRVNU9UYzVOVFUzTkN3aWRVeGxkbVZzSWpvaU9TSXNJblZ6WlhKSlpDSTZJakUyTkRBMUlpd2lkWE5sY2s1aGJXVWlPaUxrdVlMbW5Lc2lmUS4xd0dwZnV6eGhkT3NnT0NsaFU2ODFGbl9mUW54MFZxXy1xTURZcEZGMVU4JTIyJTJDJTIydXNlcm5hbWUlMjIlM0ElMjIlRTQlQjklODIlRTYlOUMlQUIlMjIlMkMlMjJhdmF0YXIlMjIlM0ElMjIuJTJGZmlsZSUyRnVzZXIlMkZpY29uJTJGZWUwZjc5NWViNmRjMGI0NmQ5MTI1MzJhZTE4NzZhZGYucG5nJTIyJTJDJTIybW9vZCUyMiUzQSUyMiVFNSU5NiU4MiVFNSU5NiU4MiVFNSU5NiU4MiUyMiUyQyUyMnRpbWVDcmVhdGUlMjIlM0ElMjIyMDE5LTA5LTE5VDIyJTNBMzElM0EzOSUyQjA4JTNBMDAlMjIlMkMlMjJ0aW1lVXBkYXRlJTIyJTNBJTIyMjAyMC0wNy0xMVQxOSUzQTI0JTNBMTUlMkIwOCUzQTAwJTIyJTJDJTIyZXhwaXJlRHVyYXRpb24lMjIlM0E2MDQ4MDAlMkMlMjJ0aW1lTG9naW4lMjIlM0ExNTk5Nzk1NTcwLjAxJTdE'
     const userInfo = JSON.parse(window.decodeURIComponent(window.atob(temp)) || '{}')
-    if (!userInfo || !userInfo.token || !userInfo.timeLogin || (Date.now() / 1000 - userInfo.timeLogin > 3600)) {
+    console.log(userInfo)
+    if (!userInfo || !userInfo.token || !userInfo.timeLogin || (Date.now() / 1000 - userInfo.timeLogin > 3600 * 24 * 7)) {
       if (localStorage.getItem('login')) {
         alert('登录失败，请手动刷新界面')
         localStorage.removeItem('login')
         return
       }
       localStorage.setItem('login', 1)
+      localStorage.removeItem('sghen_user_info')
       window.location.href =
           'https://www.sghen.cn/sghen-wap/index.html#/login?redirect=' +
           encodeURIComponent(window.location.href) + '&rand=' + Date.now()
