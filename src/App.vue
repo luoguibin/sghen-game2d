@@ -54,9 +54,9 @@ export default {
         return
       }
       localStorage.setItem('login', 1)
-      // window.location.href =
-      //     'https://www.sghen.cn/sghen-wap/index.html#/login?redirect=' +
-      //     encodeURIComponent(window.location.href) + '&rand=' + Date.now()
+      window.location.href =
+          'https://www.sghen.cn/sghen-wap/index.html#/login?redirect=' +
+          encodeURIComponent(window.location.href) + '&rand=' + Date.now()
       return
     }
 
