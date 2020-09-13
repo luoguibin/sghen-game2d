@@ -1,3 +1,7 @@
+const toDegree = function (v) {
+  return ~~((v % (Math.PI * 2)) / (Math.PI * 2) * 360)
+}
+
 export default class Tank {
   constructor (id) {
     this.id = id
@@ -8,13 +12,15 @@ export default class Tank {
     this.width = 50
     this.height = 70
     this.x = 200
-    this.y = 100
+    this.y = 500
     this.bodyRadian = 0
 
     /**
      * 炮筒角度、炮弹个数
      */
     this.barrelRadian = 0
+    this.barrelUserRadian = 0
+    this.barrelStepRadian = Math.PI / 90
     this.bulletCount = 10
     this.bulletMax = 10
 
@@ -34,57 +40,74 @@ export default class Tank {
     this.rightValve = 0
     this.leftValve = 0
 
+    this.stepRadian = 0
+    this.setValves()
+
     window.tank = this
   }
 
-  setValves ({ leftValve, rightValve, speedValve }) {
+  setValves (values = {}) {
+    const { leftValve, rightValve, speedValve } = values
     this.leftValve = leftValve || this.leftValve
     this.rightValve = rightValve || this.rightValve
     this.speedValve = speedValve || this.speedValve
+
+    const valve = this.rightValve - this.leftValve
+    // 计算拐弯角度，弧度范围[0.00001, 0.5]，接着计算出半径
+    const circleR = 30 / Math.max(Math.abs(valve), 0.00001)
+
+    const stepRadian = Math.asin(this.speedMax / 2 / circleR) * 2
+    this.stepRadian = valve >= 0 ? -stepRadian : stepRadian
   }
 
-  setRadians ({ bodyRadian, barrelRadian }) {
+  setRadians (values = {}) {
+    const { bodyRadian, barrelRadian } = values
     this.bodyRadian = bodyRadian || this.bodyRadian
-    this.barrelRadian = barrelRadian || this.barrelRadian
+
+    // barrelRadian [0, Math.PI * 2)
+    const barrelUserRadian = barrelRadian || this.barrelUserRadian
+    this.barrelUserRadian = barrelUserRadian
+    this.barrelStepRadian = Math.abs(this.barrelStepRadian)
+
+    if (Math.abs(this.barrelRadian - barrelUserRadian) < Math.PI) {
+      if (barrelUserRadian < this.barrelRadian) {
+        this.barrelStepRadian = -this.barrelStepRadian
+      }
+    } else {
+      if (barrelUserRadian > this.barrelRadian) {
+        this.barrelStepRadian = -this.barrelStepRadian
+      }
+    }
   }
 
   update () {
-    let speedX = 0
-    let speedY = 0
+    const valve = Math.abs(this.leftValve - this.rightValve)
+    this.bodyRadian += this.stepRadian * this.speedValve * valve / 4
+    const speed = this.speedMax * this.speedValve * (2 - valve)
 
-    // left 驱动点 (-0.5, leftValve)
-    // right驱动点 (0.5, rightValve)
-    let vectorY = this.rightValve - this.leftValve
-    let speedRadian = (-vectorY / 100) * this.speedValve
-
-    if (this.leftValve > 0 && this.rightValve > 0) {
-      // 前进
-      if (vectorY < 0) {
-        // 右前进
-        speedX = Math.sin(speedRadian) * this.speedMax
-        speedY = -Math.cos(speedRadian) * this.speedMax
-      } else {
-        speedX = -Math.sin(speedRadian) * this.speedMax
-        speedY = -Math.cos(speedRadian) * this.speedMax
-      }
-    } else if (this.leftValve < 0 && this.rightValve < 0) {
+    let stepX = Math.sin(this.bodyRadian) * speed
+    let stepY = -Math.cos(this.bodyRadian) * speed // 因画布坐标轴Y轴向下
+    if (this.leftValve < 0 && this.rightValve < 0) {
       // 后退
-      if (vectorY > 0) {
-        speedX = -Math.sin(speedRadian) * this.speedMax
-        speedY = Math.cos(speedRadian) * this.speedMax
-      } else {
-        speedX = -Math.sin(speedRadian) * this.speedMax
-        speedY = Math.cos(speedRadian) * this.speedMax
-      }
-    } else {
-      // 原地打转
+      stepX = -stepX
+      stepY = -stepY
     }
-    speedX *= this.speedValve
-    speedY *= this.speedValve
-    console.log(speedX, speedY)
-    this.x += speedX
-    this.y += speedY
-    this.bodyRadian += speedRadian * 2
+
+    this.x += stepX
+    this.y += stepY
+
+    if (this.barrelRadian !== this.barrelUserRadian) {
+      this.barrelRadian += this.barrelStepRadian
+      if (Math.abs(this.barrelRadian - this.barrelUserRadian) < Math.abs(this.barrelStepRadian)) {
+        this.barrelRadian = this.barrelUserRadian
+      }
+
+      if (this.barrelRadian < 0) {
+        this.barrelRadian = this.barrelRadian + Math.PI * 2
+      } else if (this.barrelRadian >= Math.PI * 2) {
+        this.barrelRadian = this.barrelRadian - Math.PI * 2
+      }
+    }
   }
 
   /**
@@ -101,6 +124,7 @@ export default class Tank {
     // 底盘
     ctx.fillStyle = '#148acf'
     ctx.fillRect(-halfWidth, -halfHeight, this.width, this.height)
+    ctx.fillRect(-halfWidth / 2, -halfHeight - 3, halfWidth, 10)
 
     // 上盘
     ctx.fillStyle = '#8a14cf'
