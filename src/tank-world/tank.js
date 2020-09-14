@@ -53,10 +53,15 @@ export default class Tank {
   }
 
   setValves (values = {}) {
-    const { leftValve, rightValve, speedValve } = values
-    this.leftValve = leftValve || this.leftValve
-    this.rightValve = rightValve || this.rightValve
-    this.speedValve = speedValve || this.speedValve
+    if (values.leftValve !== undefined) {
+      this.leftValve = values.leftValve
+    }
+    if (values.rightValve !== undefined) {
+      this.rightValve = values.rightValve
+    }
+    if (values.speedValve !== undefined) {
+      this.speedValve = values.speedValve
+    }
 
     const valve = this.rightValve - this.leftValve
     const stepRadian = Math.abs(valve) / Math.PI / 2
@@ -69,21 +74,24 @@ export default class Tank {
   }
 
   setRadians (values = {}) {
-    const { bodyRadian, barrelRadian } = values
-    this.bodyRadian = bodyRadian || this.bodyRadian
+    if (values.bodyRadian !== undefined) {
+      this.bodyRadian = values.bodyRadian
+    }
 
-    // barrelRadian [0, Math.PI * 2)
-    const barrelUserRadian = barrelRadian || this.barrelUserRadian
-    this.barrelUserRadian = barrelUserRadian % (Math.PI * 2)
-    this.barrelStepRadian = Math.abs(this.barrelStepRadian)
+    if (values.barrelRadian !== undefined) {
+      const barrelUserRadian = values.barrelRadian
+      // barrelRadian [0, Math.PI * 2)
+      this.barrelUserRadian = barrelUserRadian % (Math.PI * 2)
+      this.barrelStepRadian = Math.abs(this.barrelStepRadian)
 
-    if (Math.abs(this.barrelRadian - barrelUserRadian) < Math.PI) {
-      if (barrelUserRadian < this.barrelRadian) {
-        this.barrelStepRadian = -this.barrelStepRadian
-      }
-    } else {
-      if (barrelUserRadian > this.barrelRadian) {
-        this.barrelStepRadian = -this.barrelStepRadian
+      if (Math.abs(this.barrelRadian - barrelUserRadian) < Math.PI) {
+        if (barrelUserRadian < this.barrelRadian) {
+          this.barrelStepRadian = -this.barrelStepRadian
+        }
+      } else {
+        if (barrelUserRadian > this.barrelRadian) {
+          this.barrelStepRadian = -this.barrelStepRadian
+        }
       }
     }
   }
