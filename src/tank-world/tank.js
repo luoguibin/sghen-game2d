@@ -110,8 +110,9 @@ export default class Tank {
       yv: -Math.cos(radian) * bulletSpeed
     }
 
-    o.x = this.x + this.height / 2 * Math.sin(radian)
-    o.y = this.y - this.height / 2 * Math.cos(radian)
+    const height = this.height / 2 + 20
+    o.x = this.x + height * Math.sin(radian)
+    o.y = this.y - height * Math.cos(radian)
     o.ox = o.x
     o.oy = o.y
 

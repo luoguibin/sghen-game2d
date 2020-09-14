@@ -35,7 +35,7 @@
 
     <div class="tank-controller" @touchstart="handleTouchStart" @touchmove="handleTouchMove">
       <div class="wrapper">
-        <div class="fire" item-type="fire" @click="onFire">开火</div>
+        <div class="fire" item-type="fire">开火</div>
         <div class="left-valve">
           <span class="pointer" item-type="left-valve" :style="leftValveStyle">左档</span>
         </div>
