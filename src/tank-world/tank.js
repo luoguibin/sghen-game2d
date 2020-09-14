@@ -1,5 +1,11 @@
+import { WINDOW_HEIGHT, WINDOW_WIDTH } from '@/js/const'
+
 const toDegree = function (v) {
   return ~~((v % (Math.PI * 2)) / (Math.PI * 2) * 360)
+}
+
+const getDistance = function (x0, y0, x1, y1) {
+  return Math.sqrt(Math.pow(x0 - x1, 2) + Math.pow(y0 - y1, 2))
 }
 
 export default class Tank {
@@ -21,14 +27,14 @@ export default class Tank {
     this.barrelRadian = 0
     this.barrelUserRadian = 0
     this.barrelStepRadian = Math.PI / 90
-    this.bulletCount = 10
     this.bulletMax = 10
+    this.bullets = []
 
     /**
      * 直线前进最大速度
      * 油门范围[0, 1]
      */
-    this.speedMax = 3
+    this.speedMax = 4
     this.speedValve = 0
 
     /**
@@ -53,10 +59,12 @@ export default class Tank {
     this.speedValve = speedValve || this.speedValve
 
     const valve = this.rightValve - this.leftValve
-    // 计算拐弯角度，弧度范围[0.00001, 0.5]，接着计算出半径
-    const circleR = 30 / Math.max(Math.abs(valve), 0.00001)
+    const stepRadian = Math.abs(valve) / Math.PI / 2
 
-    const stepRadian = Math.asin(this.speedMax / 2 / circleR) * 2
+    // const valve = this.rightValve - this.leftValve
+    // // 计算拐弯角度，弧度范围[0.00001, 0.5]，接着计算出半径
+    // const circleR = 10 / Math.max(Math.abs(valve), 0.00001)
+    // const stepRadian = Math.asin(this.speedMax / 2 / circleR) * 2
     this.stepRadian = valve >= 0 ? -stepRadian : stepRadian
   }
 
@@ -80,10 +88,40 @@ export default class Tank {
     }
   }
 
+  /**
+   * 发射一发炮弹所需的信息
+   */
+  getBarrelBullet () {
+    const radian = this.bodyRadian + this.barrelRadian
+    const bulletSpeed = 20
+
+    const o = {
+      md: 1000,
+      radian: radian,
+      xv: Math.sin(radian) * bulletSpeed,
+      yv: -Math.cos(radian) * bulletSpeed
+    }
+
+    o.x = this.x + this.height / 2 * Math.sin(radian)
+    o.y = this.y - this.height / 2 * Math.cos(radian)
+    o.ox = o.x
+    o.oy = o.y
+
+    return o
+  }
+
+  fire () {
+    if (this.bullets.length < this.bulletMax) {
+      const o = this.getBarrelBullet()
+      this.bullets.push(o)
+    }
+  }
+
   update () {
-    const valve = Math.abs(this.leftValve - this.rightValve)
-    this.bodyRadian += this.stepRadian * this.speedValve * valve / 4
-    const speed = this.speedMax * this.speedValve * (2 - valve)
+    const bodyValve = 1
+    this.bodyRadian += this.stepRadian * bodyValve * this.speedValve
+    const wheelValve = (Math.abs(this.leftValve) + Math.abs(this.rightValve)) / 2
+    const speed = this.speedMax * wheelValve * this.speedValve
 
     let stepX = Math.sin(this.bodyRadian) * speed
     let stepY = -Math.cos(this.bodyRadian) * speed // 因画布坐标轴Y轴向下
@@ -95,6 +133,12 @@ export default class Tank {
 
     this.x += stepX
     this.y += stepY
+    if (this.x > WINDOW_WIDTH || this.x < 0) {
+      this.x -= stepX
+    }
+    if (this.y > WINDOW_HEIGHT || this.y < 0) {
+      this.y -= stepY
+    }
 
     if (this.barrelRadian !== this.barrelUserRadian) {
       this.barrelRadian += this.barrelStepRadian
@@ -106,6 +150,17 @@ export default class Tank {
         this.barrelRadian = this.barrelRadian + Math.PI * 2
       } else if (this.barrelRadian >= Math.PI * 2) {
         this.barrelRadian = this.barrelRadian - Math.PI * 2
+      }
+    }
+
+    const bullets = this.bullets
+    for (let i = bullets.length - 1; i >= 0; i--) {
+      const o = bullets[i]
+      o.x += o.xv
+      o.y += o.yv
+
+      if (getDistance(o.ox, o.oy, o.x, o.y) > o.md) {
+        bullets.splice(i, 1)
       }
     }
   }
@@ -133,5 +188,14 @@ export default class Tank {
     ctx.fillRect(-3, -halfHeight - 20, 6, halfHeight + 20)
 
     ctx.restore()
+
+    ctx.fillStyle = '#ffffff'
+    this.bullets.forEach(o => {
+      ctx.save()
+      ctx.translate(o.x, o.y)
+      ctx.rotate(o.radian)
+      ctx.fillRect(-2, -5, 4, 10)
+      ctx.restore()
+    })
   }
 }
