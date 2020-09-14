@@ -5,7 +5,10 @@
     <div v-if="false" :class="{'msg-box': true, 'box-hidden': !msgVisible }">
       <div v-show="msgVisible" class="flex-one">
         <div class="scroll">
-          <div v-for="item in msgs" :key="item.id" class="msg-item"><span>{{item.fromName}}:</span>{{item.content}}</div>
+          <div v-for="item in msgs" :key="item.id" class="msg-item">
+            <span>{{item.fromName}}:</span>
+            {{item.content}}
+          </div>
         </div>
       </div>
       <div v-show="msgVisible" class="msg-input">
@@ -15,28 +18,35 @@
       <button class="block" @click="onToggleMsg">{{msgVisible ? '收起' : '聊天'}}</button>
     </div>
 
-    <div v-if="false" :class="{'msg-box': true, 'box-hidden': !scoreVisible, 'score-box': !scoreVisible }">
+    <div
+      v-if="false"
+      :class="{'msg-box': true, 'box-hidden': !scoreVisible, 'score-box': !scoreVisible }"
+    >
       <div v-show="scoreVisible" class="flex-one">
         <div class="scroll">
-          <div v-for="item in players" :key="item.id" class="msg-item"><span>{{item.userName}}:</span>{{item.score}}</div>
+          <div v-for="item in players" :key="item.id" class="msg-item">
+            <span>{{item.userName}}:</span>
+            {{item.score}}
+          </div>
         </div>
       </div>
       <button class="block" @click="onToggleScore">{{scoreVisible ? '收起' : '排行榜'}}</button>
     </div>
 
-    <div class="tank-controller" @click="handleControllerStart">
+    <div class="tank-controller" @touchstart="handleTouchStart" @touchmove="handleTouchMove">
       <div class="wrapper">
-        <div class="left-valve" item-type="left-valve">
-          <span class="pointer" :style="leftValveStyle"></span>
+        <div class="fire" item-type="fire" @click="onFire">开火</div>
+        <div class="left-valve">
+          <span class="pointer" item-type="left-valve" :style="leftValveStyle">左档</span>
         </div>
-        <div class="right-valve" item-type="right-valve">
-          <span class="pointer" :style="rightValveStyle"></span>
+        <div class="right-valve">
+          <span class="pointer" item-type="right-valve" :style="rightValveStyle">右档</span>
         </div>
-        <div class="speed" item-type="speed">
-          <span class="pointer" :style="speedValveStyle"></span>
+        <div class="speed">
+          <span class="pointer" item-type="speed" :style="speedValveStyle">油门</span>
         </div>
-        <div class="barrel-radian" item-type="barrel-radian">
-          <span class="pointer" :style="barrelRadianStyle"></span>
+        <div class="barrel-radian">
+          <span class="pointer" item-type="barrel-radian" :style="barrelRadianStyle">炮角</span>
         </div>
       </div>
     </div>
@@ -64,19 +74,23 @@ export default {
         rightValve: 0,
         speedValve: 0,
         barrelRadian: 0
-      }
+      },
+      leftValveID: -1,
+      rightValveID: -1,
+      speedValveID: -1,
+      barrelRadianID: -1
     }
   },
 
   computed: {
     leftValveStyle () {
       return {
-        top: (1 - this.tankOptions.leftValve) / 2 * 100 + '%'
+        top: ((1 - this.tankOptions.leftValve) / 2) * 100 + '%'
       }
     },
     rightValveStyle () {
       return {
-        top: (1 - this.tankOptions.rightValve) / 2 * 100 + '%'
+        top: ((1 - this.tankOptions.rightValve) / 2) * 100 + '%'
       }
     },
     speedValveStyle () {
@@ -155,27 +169,85 @@ export default {
     onToggleScore () {
       this.scoreVisible = !this.scoreVisible
     },
+    onFire () {
+      this.tankWorld.fire()
+    },
 
-    handleControllerStart (e) {
+    handleTouchStart (e) {
       const itemType = e.target.getAttribute('item-type')
       if (!itemType) {
         return
       }
-      const rect = e.target.getBoundingClientRect()
-      const yRatio = (e.clientY - rect.top) / rect.height
+      const touches = e.touches
+      const lastTouch = touches[touches.length - 1]
+
+      switch (itemType) {
+        case 'fire':
+          this.onFire()
+          break
+        case 'left-valve':
+          this.leftValveID = lastTouch.identifier
+          break
+        case 'right-valve':
+          this.rightValveID = lastTouch.identifier
+          break
+        case 'speed':
+          this.speedValveID = lastTouch.identifier
+          break
+        case 'barrel-radian':
+          this.barrelRadianID = lastTouch.identifier
+          break
+        default:
+          break
+      }
+    },
+
+    handleTouchMove (e) {
+      const itemType = e.target.getAttribute('item-type')
+      if (!itemType) {
+        return
+      }
+      const touches = [...e.touches]
+      const rect = e.target.parentElement.getBoundingClientRect()
 
       switch (itemType) {
         case 'left-valve':
-          this.tankOptions.leftValve = 1 - yRatio * 2
+          {
+            const touch = touches.find(
+              (o) => o.identifier === this.leftValveID
+            )
+            const yRatio = (touch.clientY - rect.top) / rect.height
+            const valve = Math.min(Math.max(1 - yRatio * 2, -1), 1)
+            this.tankOptions.leftValve = (Math.round(valve * 5) >> 0) / 5
+          }
           break
         case 'right-valve':
-          this.tankOptions.rightValve = 1 - yRatio * 2
+          {
+            const touch = touches.find(
+              (o) => o.identifier === this.rightValveID
+            )
+            const yRatio = (touch.clientY - rect.top) / rect.height
+            const valve = Math.min(Math.max(1 - yRatio * 2, -1), 1)
+            this.tankOptions.rightValve = (Math.round(valve * 5) >> 0) / 5
+          }
           break
         case 'speed':
-          this.tankOptions.speedValve = 1 - yRatio
+          {
+            const touch = touches.find(
+              (o) => o.identifier === this.speedValveID
+            )
+            const yRatio = (touch.clientY - rect.top) / rect.height
+            this.tankOptions.speedValve = Math.min(Math.max(1 - yRatio, 0), 1)
+          }
           break
         case 'barrel-radian':
-          this.tankOptions.barrelRadian = Math.PI * 2 * yRatio
+          {
+            const touch = touches.find(
+              (o) => o.identifier === this.barrelRadianID
+            )
+            const yRatio = (touch.clientY - rect.top) / rect.height
+            this.tankOptions.barrelRadian = Math.min(Math.max(Math.PI * 2 * yRatio, 0), Math.PI * 2)
+          }
           break
         default:
           break
@@ -253,7 +325,7 @@ canvas {
   border: none;
 }
 .msg-input button {
-  min-width: 1rem;
+  min-width: 2rem;
   border: none;
   padding: 0 0.3rem;
 }
@@ -280,23 +352,45 @@ canvas {
   display: inline-block;
   position: absolute;
   top: 0;
-  width: 100%;
-  padding-top: 100%;
+  width: 2rem;
+  height: 2rem;
+  line-height: 2rem;
+  font-size: 1rem;
   background-color: white;
-  border-radius: 50%;
+  border-radius: 5px;
   transform: translate(0, -50%);
-  pointer-events: none;
+  user-select: none;
+  /* pointer-events: none; */
 }
 .tank-controller .left-valve {
   position: absolute;
   left: 10%;
-  width: 1rem;
+  width: 2rem;
   height: 100%;
-  background-color: rgb(105, 105, 105);
+  background-color: rgba(105, 105, 105, 0.5);
+  border-radius: 5px;
+}
+.tank-controller .fire {
+  position: absolute;
+  right: 20%;
+  top: 50%;
+  width: 2rem;
+  height: 2rem;
+  padding: 0.5rem;
+  text-align: center;
+  line-height: 2rem;
+  color: white;
+  transform: translate(0, -50%);
+  background-color: rgba(20, 139, 207, 0.3);
+  border-radius: 50%;
+  user-select: none;
+}
+.tank-controller .fire:active {
+  background-color: rgba(20, 139, 207, 1);
 }
 .left-valve::before,
 .right-valve::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 50%;
   width: 100%;
@@ -305,18 +399,22 @@ canvas {
 }
 .tank-controller .right-valve {
   position: absolute;
-  left: 30%;
-  width: 1rem;
+  left: 50%;
+  width: 2rem;
   height: 100%;
-  background-color: rgb(105, 105, 105);
+  background-color:rgba(105, 105, 105, 0.5);
+  border-radius: 5px;
 }
 .tank-controller .speed,
 .tank-controller .barrel-radian {
   position: absolute;
-  right: 30%;
-  width: 1rem;
+  width: 2rem;
   height: 100%;
-  background-color: rgb(105, 105, 105);
+  background-color: rgba(105, 105, 105, 0.5);
+  border-radius: 5px;
+}
+.tank-controller .speed {
+  left: 30%;
 }
 .tank-controller .barrel-radian {
   right: 10%;

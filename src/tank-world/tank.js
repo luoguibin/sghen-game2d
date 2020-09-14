@@ -74,7 +74,7 @@ export default class Tank {
 
     // barrelRadian [0, Math.PI * 2)
     const barrelUserRadian = barrelRadian || this.barrelUserRadian
-    this.barrelUserRadian = barrelUserRadian
+    this.barrelUserRadian = barrelUserRadian % (Math.PI * 2)
     this.barrelStepRadian = Math.abs(this.barrelStepRadian)
 
     if (Math.abs(this.barrelRadian - barrelUserRadian) < Math.PI) {

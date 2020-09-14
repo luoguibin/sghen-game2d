@@ -40,6 +40,10 @@ export default class TankWorld {
     this.tank.setValves(valves)
   }
 
+  fire () {
+    this.tank.fire()
+  }
+
   setTankRadians (radians) {
     this.tank.setRadians(radians)
   }
