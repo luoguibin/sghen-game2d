@@ -265,7 +265,7 @@ export default class Main {
       return
     }
     if (obstacle.type === 'add') {
-      //
+      player.addSpeed()
     } else if (obstacle.type === 'add-all') {
       player.addBulletMax()
     }
@@ -310,14 +310,28 @@ export default class Main {
     ctx.fillStyle = '#ffffff'
 
     // 地图边框
+    const mapWidth = this.gameMap.width
+    const mapHeight = this.gameMap.height
     ctx.strokeStyle = '#00ff00'
     ctx.beginPath()
     ctx.moveTo(0, 0)
-    ctx.lineTo(this.gameMap.width, 0)
-    ctx.lineTo(this.gameMap.width, this.gameMap.height)
-    ctx.lineTo(0, this.gameMap.height)
+    ctx.lineTo(mapWidth, 0)
+    ctx.lineTo(mapWidth, mapHeight)
+    ctx.lineTo(0, mapHeight)
     ctx.closePath()
     ctx.stroke()
+
+    ctx.save()
+    ctx.globalAlpha = 0.1
+    ctx.fillStyle = '#ffffff'
+    ctx.font = '50px sans-serif'
+    ctx.textAlign = 'center'
+    for (let i = 0; i < 10; i++) {
+      for (let j = 0; j < 10; j++) {
+        ctx.fillText(i + '-' + j, mapWidth / 10 * i + 50, mapHeight / 10 * j + 50)
+      }
+    }
+    ctx.restore()
 
     ctx.fillStyle = '#00ff00'
     this.obstacles.forEach(o => {

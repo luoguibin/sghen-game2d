@@ -6,6 +6,8 @@ import Bullet from './bullet'
 import Explosion from './explosion'
 import { getDistance } from './utils'
 
+const SPEED_MAX = 4
+
 export default class Tank {
   constructor (id, userName) {
     this.id = id
@@ -40,7 +42,7 @@ export default class Tank {
      * 直线前进最大速度
      * 油门范围[0, 1]
      */
-    this.speedMax = 4
+    this.speedMax = SPEED_MAX
     this.speedValve = 0
 
     /**
@@ -106,6 +108,16 @@ export default class Tank {
 
   addScore (v) {
     this.score += v
+  }
+  addSpeed (v = 2) {
+    this.speedMax = SPEED_MAX + v
+    if (this.speedTimer) {
+      clearTimeout(this.speedTimer)
+    }
+    this.speedTimer = setTimeout(() => {
+      this.speedMax = SPEED_MAX
+      this.speedTimer = null
+    }, 10000)
   }
 
   addBulletMax (v) {
