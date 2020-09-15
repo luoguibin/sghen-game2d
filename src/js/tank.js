@@ -1,16 +1,18 @@
-import { WINDOW_HEIGHT, WINDOW_WIDTH } from '@/js/const'
-
-const toDegree = function (v) {
-  return ~~((v % (Math.PI * 2)) / (Math.PI * 2) * 360)
-}
-
-const getDistance = function (x0, y0, x1, y1) {
-  return Math.sqrt(Math.pow(x0 - x1, 2) + Math.pow(y0 - y1, 2))
-}
+import {
+  WINDOW_WIDTH,
+  WINDOW_HEIGHT
+} from './const'
+import Bullet from './bullet'
+import Explosion from './explosion'
+import { getDistance } from './utils'
 
 export default class Tank {
-  constructor (id) {
+  constructor (id, userName) {
     this.id = id
+    this.userName = userName
+    this.isSelf = false
+    this.obstacleCall = function () {}
+    this.score = 0
 
     /**
      * 机身形状、位置、角度
@@ -29,6 +31,9 @@ export default class Tank {
     this.barrelStepRadian = Math.PI / 90
     this.bulletMax = 10
     this.bullets = []
+    this.bulletLoadedCount = 0
+
+    this.explosions = []
 
     /**
      * 直线前进最大速度
@@ -96,21 +101,39 @@ export default class Tank {
     }
   }
 
+  addScore (v) {
+    this.score += v
+  }
+
+  addBulletMax (v) {
+    this.bulletMax += v || 1
+  }
+
+  newHit (obstacle, bulletId) {
+    const index = this.bullets.findIndex(o => o.id === bulletId)
+    if (index < 0) {
+      return
+    }
+    this.bullets.splice(index, 1)
+    this.explosions.push(new Explosion(obstacle.x, obstacle.y))
+  }
+
   /**
    * 发射一发炮弹所需的信息
    */
   getBarrelBullet () {
     const radian = this.bodyRadian + this.barrelRadian
-    const bulletSpeed = 20
+    const bulletSpeed = 16
 
     const o = {
-      md: 1000,
+      md: WINDOW_HEIGHT * 5,
       radian: radian,
       xv: Math.sin(radian) * bulletSpeed,
       yv: -Math.cos(radian) * bulletSpeed
     }
 
     const height = this.height / 2 + 20
+    o.id = this.bulletLoadedCount++
     o.x = this.x + height * Math.sin(radian)
     o.y = this.y - height * Math.cos(radian)
     o.ox = o.x
@@ -119,14 +142,20 @@ export default class Tank {
     return o
   }
 
-  fire () {
-    if (this.bullets.length < this.bulletMax) {
-      const o = this.getBarrelBullet()
-      this.bullets.push(o)
+  getScreenXY () {
+    return {
+      x: this.x - WINDOW_WIDTH / 2,
+      y: this.y - WINDOW_HEIGHT / 2
     }
   }
 
-  update () {
+  fire (o) {
+    if (this.bullets.length < this.bulletMax) {
+      this.bullets.push(new Bullet(o))
+    }
+  }
+
+  update (gameMap, obstacles) {
     const bodyValve = 1
     this.bodyRadian += this.stepRadian * bodyValve * this.speedValve
     const wheelValve = (Math.abs(this.leftValve) + Math.abs(this.rightValve)) / 2
@@ -142,10 +171,10 @@ export default class Tank {
 
     this.x += stepX
     this.y += stepY
-    if (this.x > WINDOW_WIDTH || this.x < 0) {
+    if (this.x > gameMap.width - this.width / 2 || this.x < this.width / 2) {
       this.x -= stepX
     }
-    if (this.y > WINDOW_HEIGHT || this.y < 0) {
+    if (this.y > gameMap.height - this.height / 2 || this.y < this.height / 2) {
       this.y -= stepY
     }
 
@@ -165,11 +194,42 @@ export default class Tank {
     const bullets = this.bullets
     for (let i = bullets.length - 1; i >= 0; i--) {
       const o = bullets[i]
-      o.x += o.xv
-      o.y += o.yv
+      if (o.isLocked) {
+        continue
+      }
+      o.update()
 
-      if (getDistance(o.ox, o.oy, o.x, o.y) > o.md) {
+      // 命中物体，只判断本机子弹
+      if (this.isSelf) {
+        for (let j = obstacles.length - 1; j >= 0; j--) {
+          const o_ = obstacles[j]
+          if (o_.isLocked) {
+            continue
+          }
+          const d = getDistance(o_.x, o_.y, o.x, o.y)
+          if (d <= o_.value) {
+            o_.isLocked = true
+            o.isLocked = true
+            this.obstacleCall(o_, o, this)
+            break
+          }
+        }
+      }
+
+      // 超出范围
+      o.update()
+      if (o.isEnd) {
         bullets.splice(i, 1)
+      }
+    }
+
+    const explosions = this.explosions
+    for (let i = explosions.length - 1; i >= 0; i--) {
+      const o = explosions[i]
+      if (o.isEnd) {
+        explosions.splice(i, 1)
+      } else {
+        o.update()
       }
     }
   }
@@ -178,7 +238,7 @@ export default class Tank {
    * 绘制
    * @param {CanvasRenderingContext2D} ctx
    */
-  draw (ctx) {
+  render (ctx) {
     ctx.save()
     ctx.translate(this.x, this.y)
     ctx.rotate(this.bodyRadian)
@@ -196,15 +256,26 @@ export default class Tank {
     ctx.fillRect(-halfWidth * 0.5, -halfHeight * 0.5, halfWidth, halfHeight)
     ctx.fillRect(-3, -halfHeight - 20, 6, halfHeight + 20)
 
+    ctx.fillStyle = '#ffffff'
+    ctx.rotate(-this.barrelRadian - this.bodyRadian)
+    ctx.textAlign = 'center'
+    ctx.fillText(this.userName, 0, 0)
+
+    if (this.isSelf) {
+      ctx.translate(0, -WINDOW_HEIGHT / 2)
+      ctx.fillText(`bullet: ${this.bulletMax - this.bullets.length}/${this.bulletMax} score: ${this.score}`, 0, 12)
+      ctx.textAlign = 'left'
+      ctx.fillText(`x:${this.x >> 0} y:${this.y >> 0}`, -WINDOW_WIDTH / 2, 12)
+    }
+
     ctx.restore()
 
-    ctx.fillStyle = '#ffffff'
     this.bullets.forEach(o => {
-      ctx.save()
-      ctx.translate(o.x, o.y)
-      ctx.rotate(o.radian)
-      ctx.fillRect(-2, -5, 4, 10)
-      ctx.restore()
+      o.render(ctx)
+    })
+
+    this.explosions.forEach(o => {
+      o.render(ctx)
     })
   }
 }

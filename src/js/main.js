@@ -1,3 +1,4 @@
+import { throttle } from 'lodash'
 import {
   WS_URL,
   PIXEL_RATIO,
@@ -7,8 +8,8 @@ import {
   CANVAS_HEIGHT
 } from './const'
 import { ACTION, PLAYER, SKILL, SYSTEM, newOrder } from './order'
-import DirectionView from './direction-view'
-import Player from './player'
+// import Player from './player'
+import Tank from './tank'
 
 /**
  * 游戏主函数
@@ -41,20 +42,17 @@ export default class Main {
     this.aniId = 0
 
     this.bindLoop = this.loop.bind(this)
-    this.touchHandler = this.touchEventHandler.bind(this)
-    canvas.addEventListener('touchstart', this.touchHandler)
-    canvas.addEventListener('touchmove', this.touchHandler)
-    canvas.addEventListener('touchend', this.touchHandler)
 
     this.players = []
     this.obstacles = []
-    this.directionView = new DirectionView()
     this.touchIdentifier = null
 
     this.msgCall = function () {}
     this.scoreCall = function () {}
 
     this.initWS()
+    this.setTankValves = throttle(this._setTankValves, 200, { leading: true })
+    this.setTankRadians = throttle(this._setTankRadians, 200, { leading: true })
   }
 
   initWS () {
@@ -80,6 +78,34 @@ export default class Main {
     this.ws.send(JSON.stringify(o))
   }
 
+  _setTankValves (valves) {
+    const str = JSON.stringify(valves)
+    if (this._oldValvesStr === str) {
+      return
+    }
+    this._oldValvesStr = str
+    const { x, y } = this.player
+    this.sendMsg(newOrder(ACTION.VALVES, PLAYER.ALL, { ...valves, x, y }))
+  }
+
+  _setTankRadians (radians) {
+    const str = JSON.stringify(radians)
+    if (this._oldRadiansStr === str) {
+      return
+    }
+    this._oldRadiansStr = str
+    const { x, y } = this.player
+    this.sendMsg(newOrder(ACTION.RADIANS, PLAYER.ALL, { ...radians, x, y }))
+  }
+
+  fire () {
+    const o = this.player.getBarrelBullet()
+    if (!o) {
+      return
+    }
+    this.sendMsg(newOrder(SKILL.START, PLAYER.ALL, o))
+  }
+
   sendText (text) {
     this.sendMsg(newOrder(SYSTEM.MESSAGE, PLAYER.ALL, text))
   }
@@ -98,15 +124,15 @@ export default class Main {
         // 初始化登录的玩家
         this.id = data.id
         this.userName = data.username
-        const newPlayer = new Player(this.id, this.userName)
+        const newPlayer = new Tank(this.id, this.userName)
         if (data.actionOrder) {
           const position = data.actionOrder.data
           if (position.x !== undefined) {
             newPlayer.x = position.x
             newPlayer.y = position.y
           }
-          if (data.actionOrder.id === ACTION.MOVING) {
-            newPlayer.walk(data.direction)
+          if (data.actionOrder.id === ACTION.VALVES) {
+            newPlayer.setValves(data)
           }
         }
         newPlayer.obstacleCall = this.obstacleCall.bind(this)
@@ -132,7 +158,7 @@ export default class Main {
           const selfId = this.player.id
           data.players.forEach(o => {
             if (o.id !== selfId) {
-              const newPlayer = new Player(o.id, o.username)
+              const newPlayer = new Tank(o.id, o.username)
               newPlayer.obstacleCall = this.obstacleCall.bind(this)
               if (o.actionOrder) {
                 const { orderId, data } = o.actionOrder
@@ -140,8 +166,8 @@ export default class Main {
                   newPlayer.x = data.x
                   newPlayer.y = data.y
                 }
-                if (orderId === ACTION.MOVING) {
-                  newPlayer.walk(data.direction)
+                if (orderId === ACTION.VALVES) {
+                  newPlayer.setValves(data)
                 }
               }
 
@@ -166,13 +192,13 @@ export default class Main {
                 fromPlayer.x = position.x
                 fromPlayer.y = position.y
               }
-              if (data.actionOrder.id === ACTION.MOVING) {
+              if (data.actionOrder.id === ACTION.VALVES) {
                 fromPlayer.walk(data.direction)
               }
             }
             return
           }
-          const newPlayer = new Player(data.id, data.username)
+          const newPlayer = new Tank(data.id, data.username)
           newPlayer.obstacleCall = this.obstacleCall.bind(this)
           if (data.actionOrder) {
             const position = data.actionOrder.data
@@ -180,23 +206,25 @@ export default class Main {
               newPlayer.x = position.x
               newPlayer.y = position.y
             }
-            if (data.actionOrder.id === ACTION.MOVING) {
-              newPlayer.walk(data.direction)
+            if (data.actionOrder.id === ACTION.VALVES) {
+              newPlayer.setValves(data)
             }
           }
           this.players.push(newPlayer)
         }
         break
-      case ACTION.MOVING:
+      case ACTION.VALVES:
         fromPlayer.x = data.x
         fromPlayer.y = data.y
-        fromPlayer.walk(data.direction)
+        fromPlayer.setValves(data)
         break
-      case ACTION.IDEL:
-        fromPlayer.walk(-1)
+      case ACTION.RADIANS:
+        fromPlayer.x = data.x
+        fromPlayer.y = data.y
+        fromPlayer.setRadians(data)
         break
       case SKILL.START:
-        fromPlayer.startNextSkill0(Math.max(this.gameMap.width, this.gameMap.height) * 1.5)
+        fromPlayer.fire(data)
         break
       case SKILL.HIT:
         this.handleHit(fromPlayer, data)
@@ -237,9 +265,9 @@ export default class Main {
       return
     }
     if (obstacle.type === 'add') {
-      player.addBullet(obstacle.value)
+      //
     } else if (obstacle.type === 'add-all') {
-      player.addBullet(obstacle.value, 1)
+      player.addBulletMax()
     }
     player.addScore(obstacle.value)
     player.newHit(obstacle, skillId)
@@ -266,75 +294,6 @@ export default class Main {
     this.heartId = setInterval(() => {
       this.sendMsg(newOrder(PLAYER.HEART))
     }, 8000)
-  }
-
-  /**
-   * 游戏触摸事件处理逻辑
-   * @param {TouchEvent} e
-   */
-  touchEventHandler (e) {
-    e.preventDefault()
-    e.stopPropagation()
-    switch (e.type) {
-      case 'touchstart': {
-        const touches = e.touches
-        for (let i = 0; i < touches.length; i++) {
-          const touch = touches[i]
-          const { value } = this.directionView.testXY(touch.clientX, touch.clientY) || {}
-          if (value !== undefined) {
-            if (value > -2) {
-              if (this.touchIdentifier === null) {
-                this.touchIdentifier = touch.identifier
-                if (this.preWalkValue === value) {
-                  return
-                }
-                this.preWalkValue = value
-                this.sendMsg(newOrder(ACTION.MOVING, this.player.id, { direction: value, x: this.player.x, y: this.player.y }))
-              }
-            } else {
-              this.sendMsg(newOrder(SKILL.START))
-            }
-          }
-        }
-      }
-        break
-      case 'touchmove': {
-        const touchIdentifier = this.touchIdentifier
-        if (touchIdentifier === null) {
-          return
-        }
-        const touches = e.touches
-        for (let i = 0; i < touches.length; i++) {
-          if (touchIdentifier === touches[i].identifier) {
-            const touch = touches[i]
-            const { value } = this.directionView.testXY(touch.clientX, touch.clientY) || {}
-            if (value !== undefined && value > -2) {
-              if (this.preWalkValue === value) {
-                return
-              }
-              this.preWalkValue = value
-              this.sendMsg(newOrder(ACTION.MOVING, this.player.id, { direction: value, x: this.player.x, y: this.player.y }))
-            }
-            break
-          }
-        }
-      }
-        break
-      case 'touchend':
-      case 'touchcancel':
-        {
-          const touches = [...e.touches] || []
-          const index = touches.findIndex(o => o.identifier === this.touchIdentifier)
-          if ((index === -1 || touches.length === 0) && this.touchIdentifier !== null) {
-            this.touchIdentifier = null
-            this.preWalkValue = null
-            this.sendMsg(newOrder(ACTION.IDEL, this.player.id, { x: this.player.x, y: this.player.y }))
-          }
-        }
-        break
-      default:
-        break
-    }
   }
 
   /**
@@ -377,8 +336,6 @@ export default class Main {
     })
 
     ctx.translate(cameraX, cameraY)
-
-    this.directionView.render(ctx)
   }
 
   obstacleCall (obstacle, skill, player) {
@@ -394,11 +351,11 @@ export default class Main {
 
   // 游戏逻辑更新主函数
   update () {
-    this.players.sort(function (o1, o2) {
-      return o1.x - o2.x && o1.y - o2.y
-    }).forEach(o => {
-      o.update(this.gameMap)
-      o.updateSkill(this.obstacles)
+    // .sort(function (o1, o2) {
+    //   return o1.x - o2.x && o1.y - o2.y
+    // })
+    this.players.forEach(o => {
+      o.update(this.gameMap, this.obstacles)
     })
   }
 

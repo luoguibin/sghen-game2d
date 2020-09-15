@@ -2,7 +2,7 @@
   <div class="app">
     <canvas ref="canvas"></canvas>
 
-    <div v-if="false" :class="{'msg-box': true, 'box-hidden': !msgVisible }">
+    <div :class="{'msg-box': true, 'box-hidden': !msgVisible }">
       <div v-show="msgVisible" class="flex-one">
         <div class="scroll">
           <div v-for="item in msgs" :key="item.id" class="msg-item">
@@ -19,7 +19,6 @@
     </div>
 
     <div
-      v-if="false"
       :class="{'msg-box': true, 'box-hidden': !scoreVisible, 'score-box': !scoreVisible }"
     >
       <div v-show="scoreVisible" class="flex-one">
@@ -42,8 +41,8 @@
         <div class="right-valve">
           <span class="pointer" item-type="right-valve" :style="rightValveStyle">右档</span>
         </div>
-        <div class="speed">
-          <span class="pointer" item-type="speed" :style="speedValveStyle">油门</span>
+        <div class="speed-valve">
+          <span class="pointer" item-type="speed-valve" :style="speedValveStyle">油门</span>
         </div>
         <div class="barrel-radian">
           <span class="pointer" item-type="barrel-radian" :style="barrelRadianStyle">炮角</span>
@@ -55,7 +54,6 @@
 
 <script>
 import GameMain from './js/main'
-import TankWorld from './tank-world/index'
 
 export default {
   name: 'App',
@@ -107,27 +105,26 @@ export default {
 
   mounted () {
     window.app = this
-    this.tankWorld = new TankWorld(this.$refs.canvas)
-    // const temp = localStorage.getItem('sghen_user_info') || 'JTdCJTIyaWQlMjIlM0ExNjQwNSUyQyUyMmFjY291bnQlMjIlM0ElMjJvbjNULTQzaVliNy15ZlB6cTdZVzJMOGVJbVdvJTIyJTJDJTIycGhvbmUlMjIlM0ElMjIxNTYyNTA0NTk4NCUyMiUyQyUyMnRva2VuJTIyJTNBJTIyZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SmxlSEFpT2pFMk1EQTBNREF6TnpRc0ltbGhkQ0k2TVRVNU9UYzVOVFUzTkN3aWRVeGxkbVZzSWpvaU9TSXNJblZ6WlhKSlpDSTZJakUyTkRBMUlpd2lkWE5sY2s1aGJXVWlPaUxrdVlMbW5Lc2lmUS4xd0dwZnV6eGhkT3NnT0NsaFU2ODFGbl9mUW54MFZxXy1xTURZcEZGMVU4JTIyJTJDJTIydXNlcm5hbWUlMjIlM0ElMjIlRTQlQjklODIlRTYlOUMlQUIlMjIlMkMlMjJhdmF0YXIlMjIlM0ElMjIuJTJGZmlsZSUyRnVzZXIlMkZpY29uJTJGZWUwZjc5NWViNmRjMGI0NmQ5MTI1MzJhZTE4NzZhZGYucG5nJTIyJTJDJTIybW9vZCUyMiUzQSUyMiVFNSU5NiU4MiVFNSU5NiU4MiVFNSU5NiU4MiUyMiUyQyUyMnRpbWVDcmVhdGUlMjIlM0ElMjIyMDE5LTA5LTE5VDIyJTNBMzElM0EzOSUyQjA4JTNBMDAlMjIlMkMlMjJ0aW1lVXBkYXRlJTIyJTNBJTIyMjAyMC0wNy0xMVQxOSUzQTI0JTNBMTUlMkIwOCUzQTAwJTIyJTJDJTIyZXhwaXJlRHVyYXRpb24lMjIlM0E2MDQ4MDAlMkMlMjJ0aW1lTG9naW4lMjIlM0ExNTk5Nzk1NTcwLjAxJTdE'
-    // const userInfo = JSON.parse(window.decodeURIComponent(window.atob(temp)) || '{}')
-    // console.log(userInfo)
-    // if (!userInfo || !userInfo.token || !userInfo.timeLogin || (Date.now() / 1000 - userInfo.timeLogin > 3600 * 24 * 7)) {
-    //   if (localStorage.getItem('login')) {
-    //     alert('登录失败，请手动刷新界面')
-    //     localStorage.removeItem('login')
-    //     return
-    //   }
-    //   localStorage.setItem('login', 1)
-    //   localStorage.removeItem('sghen_user_info')
-    //   window.location.href =
-    //       'https://www.sghen.cn/sghen-wap/index.html#/login?redirect=' +
-    //       encodeURIComponent(window.location.href) + '&rand=' + Date.now()
-    //   return
-    // }
+    const temp = localStorage.getItem('sghen_user_info') || 'JTdCJTIyaWQlMjIlM0ExNjQwNSUyQyUyMmFjY291bnQlMjIlM0ElMjJvbjNULTQzaVliNy15ZlB6cTdZVzJMOGVJbVdvJTIyJTJDJTIycGhvbmUlMjIlM0ElMjIxNTYyNTA0NTk4NCUyMiUyQyUyMnRva2VuJTIyJTNBJTIyZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SmxlSEFpT2pFMk1EQTBNREF6TnpRc0ltbGhkQ0k2TVRVNU9UYzVOVFUzTkN3aWRVeGxkbVZzSWpvaU9TSXNJblZ6WlhKSlpDSTZJakUyTkRBMUlpd2lkWE5sY2s1aGJXVWlPaUxrdVlMbW5Lc2lmUS4xd0dwZnV6eGhkT3NnT0NsaFU2ODFGbl9mUW54MFZxXy1xTURZcEZGMVU4JTIyJTJDJTIydXNlcm5hbWUlMjIlM0ElMjIlRTQlQjklODIlRTYlOUMlQUIlMjIlMkMlMjJhdmF0YXIlMjIlM0ElMjIuJTJGZmlsZSUyRnVzZXIlMkZpY29uJTJGZWUwZjc5NWViNmRjMGI0NmQ5MTI1MzJhZTE4NzZhZGYucG5nJTIyJTJDJTIybW9vZCUyMiUzQSUyMiVFNSU5NiU4MiVFNSU5NiU4MiVFNSU5NiU4MiUyMiUyQyUyMnRpbWVDcmVhdGUlMjIlM0ElMjIyMDE5LTA5LTE5VDIyJTNBMzElM0EzOSUyQjA4JTNBMDAlMjIlMkMlMjJ0aW1lVXBkYXRlJTIyJTNBJTIyMjAyMC0wNy0xMVQxOSUzQTI0JTNBMTUlMkIwOCUzQTAwJTIyJTJDJTIyZXhwaXJlRHVyYXRpb24lMjIlM0E2MDQ4MDAlMkMlMjJ0aW1lTG9naW4lMjIlM0ExNTk5Nzk1NTcwLjAxJTdE'
+    const userInfo = JSON.parse(window.decodeURIComponent(window.atob(temp)) || '{}')
+    console.log(userInfo)
+    if (!userInfo || !userInfo.token || !userInfo.timeLogin || (Date.now() / 1000 - userInfo.timeLogin > 3600 * 24 * 7)) {
+      if (localStorage.getItem('login')) {
+        alert('登录失败，请手动刷新界面')
+        localStorage.removeItem('login')
+        return
+      }
+      localStorage.setItem('login', 1)
+      localStorage.removeItem('sghen_user_info')
+      window.location.href =
+          'https://www.sghen.cn/sghen-wap/index.html#/login?redirect=' +
+          encodeURIComponent(window.location.href) + '&rand=' + Date.now()
+      return
+    }
 
-    // this.gameMain = new GameMain(this.$refs.canvas, userInfo)
-    // this.gameMain.msgCall = this.msgCall.bind(this)
-    // this.gameMain.scoreCall = this.scoreCall.bind(this)
+    this.gameMain = new GameMain(this.$refs.canvas, userInfo)
+    this.gameMain.msgCall = this.msgCall.bind(this)
+    this.gameMain.scoreCall = this.scoreCall.bind(this)
 
     document.oncontextmenu = function () {
       return false
@@ -170,7 +167,7 @@ export default {
       this.scoreVisible = !this.scoreVisible
     },
     onFire () {
-      this.tankWorld.fire()
+      this.gameMain.fire()
     },
 
     handleTouchStart (e) {
@@ -191,7 +188,7 @@ export default {
         case 'right-valve':
           this.rightValveID = lastTouch.identifier
           break
-        case 'speed':
+        case 'speed-valve':
           this.speedValveID = lastTouch.identifier
           break
         case 'barrel-radian':
@@ -231,13 +228,14 @@ export default {
             this.tankOptions.rightValve = (Math.round(valve * 5) >> 0) / 5
           }
           break
-        case 'speed':
+        case 'speed-valve':
           {
             const touch = touches.find(
               (o) => o.identifier === this.speedValveID
             )
             const yRatio = (touch.clientY - rect.top) / rect.height
-            this.tankOptions.speedValve = Math.min(Math.max(1 - yRatio, 0), 1)
+            const valve = Math.min(Math.max(1 - yRatio, 0), 1)
+            this.tankOptions.speedValve = (Math.round(valve * 10) >> 0) / 10
           }
           break
         case 'barrel-radian':
@@ -252,8 +250,11 @@ export default {
         default:
           break
       }
-      this.tankWorld.setTankValves(this.tankOptions)
-      this.tankWorld.setTankRadians(this.tankOptions)
+      if (itemType.includes('valve')) {
+        this.gameMain.setTankValves(this.tankOptions)
+      } else {
+        this.gameMain.setTankRadians(this.tankOptions)
+      }
     }
   }
 }
@@ -287,13 +288,21 @@ canvas {
   flex-direction: column;
   overflow: hidden;
   background-color: rgb(255, 255, 255);
+  z-index: 10;
 }
 .score-box {
   top: 2rem;
 }
 .box-hidden {
-  width: 100px;
+  width: 3rem;
   max-height: 2rem;
+  z-index: 1;
+  background-color: rgba(20, 139, 207, 0.3);
+}
+.box-hidden .block {
+  background-color: rgba(20, 139, 207, 0.3);
+  border: none;
+  color: white;
 }
 .msg-box .flex-one {
   flex: 1;
@@ -405,7 +414,7 @@ canvas {
   background-color:rgba(105, 105, 105, 0.5);
   border-radius: 5px;
 }
-.tank-controller .speed,
+.tank-controller .speed-valve,
 .tank-controller .barrel-radian {
   position: absolute;
   width: 2rem;
@@ -413,7 +422,7 @@ canvas {
   background-color: rgba(105, 105, 105, 0.5);
   border-radius: 5px;
 }
-.tank-controller .speed {
+.tank-controller .speed-valve {
   left: 30%;
 }
 .tank-controller .barrel-radian {

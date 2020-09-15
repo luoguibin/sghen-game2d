@@ -1,6 +1,6 @@
 export const ACTION = {
-  MOVING: -1000,
-  IDEL: -1001,
+  VALVES: -1000,
+  RADIANS: -1001,
   ENTER_MAP: -1002,
   LEAVE_MAP: -1003
 }

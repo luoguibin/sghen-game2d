@@ -1,6 +1,6 @@
 import {
   SKILL_DIRECTION
-} from './skill0'
+} from './bullet'
 
 const MAX_COUNT = 14
 const ROW_COUNT = 5
@@ -13,7 +13,7 @@ const SKILL_SIZE = {
   HALF_HEIGHT: SKILL_HEIGHT / 2
 }
 
-export default class Skill0 {
+export default class Skill1 {
   constructor (x, y, direction = -99) {
     this.img = new Image()
     this.img.src = require('@/images/explosions.png')
