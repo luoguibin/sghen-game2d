@@ -19,8 +19,9 @@ export default class Tank {
      */
     this.width = 50
     this.height = 70
+    this.circleLimit = Math.sqrt(Math.pow((this.width + this.height) / 4, 2) * 2)
     this.x = 200
-    this.y = 500
+    this.y = 200
     this.bodyRadian = 0
 
     /**
@@ -157,7 +158,7 @@ export default class Tank {
     }
   }
 
-  update (gameMap, obstacles) {
+  update (gameMap, obstacles, tanks) {
     const bodyValve = 1
     this.bodyRadian += this.stepRadian * bodyValve * this.speedValve
     const wheelValve = (Math.abs(this.leftValve) + Math.abs(this.rightValve)) / 2
@@ -173,11 +174,30 @@ export default class Tank {
 
     this.x += stepX
     this.y += stepY
+
+    // 障碍物检测
     if (this.x > gameMap.width - this.width / 2 || this.x < this.width / 2) {
       this.x -= stepX
     }
     if (this.y > gameMap.height - this.height / 2 || this.y < this.height / 2) {
       this.y -= stepY
+    }
+    for (let j = obstacles.length - 1; j >= 0; j--) {
+      const o = obstacles[j]
+      if (getDistance(o.x, o.y, this.x, this.y) < o.value + this.circleLimit) {
+        this.x -= stepX
+        this.y -= stepY
+      }
+    }
+    for (let i = tanks.length - 1; i >= 0; i--) {
+      const o = tanks[i]
+      if (o.isSelf) {
+        continue
+      }
+      if (getDistance(o.x, o.y, this.x, this.y) < this.circleLimit * 2) {
+        this.x -= stepX
+        this.y -= stepY
+      }
     }
 
     this.wheelStep++
@@ -226,8 +246,7 @@ export default class Tank {
           if (o_.isLocked) {
             continue
           }
-          const d = getDistance(o_.x, o_.y, o.x, o.y)
-          if (d <= o_.value) {
+          if (getDistance(o_.x, o_.y, o.x, o.y) <= o_.value) {
             o_.isLocked = true
             o.isLocked = true
             this.obstacleCall(o_, o, this)

@@ -355,7 +355,7 @@ export default class Main {
     //   return o1.x - o2.x && o1.y - o2.y
     // })
     this.players.forEach(o => {
-      o.update(this.gameMap, this.obstacles)
+      o.update(this.gameMap, this.obstacles, this.players)
     })
   }
 
