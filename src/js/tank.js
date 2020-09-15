@@ -50,7 +50,9 @@ export default class Tank {
      */
     this.rightValve = 0
     this.leftValve = 0
-
+    this.rightStep = 0
+    this.leftStep = 0
+    this.wheelStep = 0
     this.stepRadian = 0
     this.setValves()
 
@@ -178,6 +180,24 @@ export default class Tank {
       this.y -= stepY
     }
 
+    this.wheelStep++
+    if (this.wheelStep % 10 === 0) {
+      if (this.leftValve * this.speedValve !== 0) {
+        if (this.leftStep === 0) {
+          this.leftStep = this.leftValve < 0 ? -5 * this.leftValve : 5 * this.leftValve
+        } else {
+          this.leftStep = 0
+        }
+      }
+      if (this.rightValve * this.speedValve !== 0) {
+        if (this.rightStep === 0) {
+          this.rightStep = this.rightValve < 0 ? -5 * this.rightValve : 5 * this.rightValve
+        } else {
+          this.rightStep = 0
+        }
+      }
+    }
+
     if (this.barrelRadian !== this.barrelUserRadian) {
       this.barrelRadian += this.barrelStepRadian
       if (Math.abs(this.barrelRadian - this.barrelUserRadian) < Math.abs(this.barrelStepRadian)) {
@@ -249,6 +269,14 @@ export default class Tank {
     ctx.fillStyle = '#148acf'
     ctx.fillRect(-halfWidth, -halfHeight, this.width, this.height)
     ctx.fillRect(-halfWidth / 2, -halfHeight - 3, halfWidth, 10)
+
+    ctx.fillStyle = '#00ffff'
+    const wheelWidth = halfWidth / 3
+    for (let i = 0; i < 10; i++) {
+      const gap = this.height / 10 * i - halfHeight
+      ctx.fillRect(-halfWidth, this.leftStep + gap, wheelWidth, 2)
+      ctx.fillRect(halfWidth - wheelWidth, this.rightStep + gap, wheelWidth, 2)
+    }
 
     // 上盘
     ctx.fillStyle = '#8a14cf'
