@@ -105,7 +105,7 @@ export default {
 
   mounted () {
     window.app = this
-    const temp = localStorage.getItem('sghen_user_info') || 'JTdCJTIyaWQlMjIlM0ExNjQwNSUyQyUyMmFjY291bnQlMjIlM0ElMjJvbjNULTQzaVliNy15ZlB6cTdZVzJMOGVJbVdvJTIyJTJDJTIycGhvbmUlMjIlM0ElMjIxNTYyNTA0NTk4NCUyMiUyQyUyMnRva2VuJTIyJTNBJTIyZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SmxlSEFpT2pFMk1EQTBNREF6TnpRc0ltbGhkQ0k2TVRVNU9UYzVOVFUzTkN3aWRVeGxkbVZzSWpvaU9TSXNJblZ6WlhKSlpDSTZJakUyTkRBMUlpd2lkWE5sY2s1aGJXVWlPaUxrdVlMbW5Lc2lmUS4xd0dwZnV6eGhkT3NnT0NsaFU2ODFGbl9mUW54MFZxXy1xTURZcEZGMVU4JTIyJTJDJTIydXNlcm5hbWUlMjIlM0ElMjIlRTQlQjklODIlRTYlOUMlQUIlMjIlMkMlMjJhdmF0YXIlMjIlM0ElMjIuJTJGZmlsZSUyRnVzZXIlMkZpY29uJTJGZWUwZjc5NWViNmRjMGI0NmQ5MTI1MzJhZTE4NzZhZGYucG5nJTIyJTJDJTIybW9vZCUyMiUzQSUyMiVFNSU5NiU4MiVFNSU5NiU4MiVFNSU5NiU4MiUyMiUyQyUyMnRpbWVDcmVhdGUlMjIlM0ElMjIyMDE5LTA5LTE5VDIyJTNBMzElM0EzOSUyQjA4JTNBMDAlMjIlMkMlMjJ0aW1lVXBkYXRlJTIyJTNBJTIyMjAyMC0wNy0xMVQxOSUzQTI0JTNBMTUlMkIwOCUzQTAwJTIyJTJDJTIyZXhwaXJlRHVyYXRpb24lMjIlM0E2MDQ4MDAlMkMlMjJ0aW1lTG9naW4lMjIlM0ExNTk5Nzk1NTcwLjAxJTdE'
+    const temp = localStorage.getItem('sghen_user_info')
     const userInfo = JSON.parse(window.decodeURIComponent(window.atob(temp)) || '{}')
     console.log(userInfo)
     if (!userInfo || !userInfo.token || !userInfo.timeLogin || (Date.now() / 1000 - userInfo.timeLogin > 3600 * 24 * 7)) {
