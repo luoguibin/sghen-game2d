@@ -171,8 +171,8 @@ export default class Tank {
   }
 
   update (gameMap, obstacles, tanks) {
-    const bodyValve = 1
-    this.bodyRadian += this.stepRadian * bodyValve * this.speedValve
+    const stepRadian = this.stepRadian * this.speedValve
+    this.bodyRadian += stepRadian
     const wheelValve = (Math.abs(this.leftValve) + Math.abs(this.rightValve)) / 2
     const speed = this.speedMax * wheelValve * this.speedValve
 
@@ -190,15 +190,20 @@ export default class Tank {
     // 障碍物检测
     if (this.x > gameMap.width - this.width / 2 || this.x < this.width / 2) {
       this.x -= stepX
+      this.y -= stepY
+      this.bodyRadian -= stepRadian
     }
     if (this.y > gameMap.height - this.height / 2 || this.y < this.height / 2) {
+      this.x -= stepX
       this.y -= stepY
+      this.bodyRadian -= stepRadian
     }
     for (let j = obstacles.length - 1; j >= 0; j--) {
       const o = obstacles[j]
       if (getDistance(o.x, o.y, this.x, this.y) < o.value + this.circleLimit) {
         this.x -= stepX
         this.y -= stepY
+        this.bodyRadian -= stepRadian
       }
     }
     for (let i = tanks.length - 1; i >= 0; i--) {
@@ -209,6 +214,7 @@ export default class Tank {
       if (getDistance(o.x, o.y, this.x, this.y) < this.circleLimit * 2) {
         this.x -= stepX
         this.y -= stepY
+        this.bodyRadian -= stepRadian
       }
     }
 
