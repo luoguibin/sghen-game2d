@@ -1,8 +1,8 @@
 <template>
   <div class="app">
-    <canvas ref="canvas"></canvas>
+    <canvas v-if="false" ref="canvas"></canvas>
 
-    <div :class="{'msg-box': true, 'box-hidden': !msgVisible }">
+    <div v-if="false" :class="{'msg-box': true, 'box-hidden': !msgVisible }">
       <div v-show="msgVisible" class="flex-one">
         <div class="scroll">
           <div v-for="item in msgs" :key="item.id" class="msg-item">
@@ -19,6 +19,7 @@
     </div>
 
     <div
+      v-if="false"
       :class="{'msg-box': true, 'box-hidden': !scoreVisible, 'score-box': !scoreVisible }"
     >
       <div v-show="scoreVisible" class="flex-one">
@@ -32,7 +33,12 @@
       <button class="block" @click="onToggleScore">{{scoreVisible ? '收起' : '排行榜'}}</button>
     </div>
 
-    <div class="tank-controller" @touchstart="handleTouchStart" @touchmove="handleTouchMove">
+    <div
+      v-if="false"
+      class="tank-controller"
+      @touchstart="handleTouchStart"
+      @touchmove="handleTouchMove"
+    >
       <div class="wrapper">
         <div class="fire" item-type="fire">开火</div>
         <div class="left-valve">
@@ -53,7 +59,8 @@
 </template>
 
 <script>
-import GameMain from './js/main'
+// import GameMain from './js/main'
+import PhaserGame from './phaser/index'
 
 export default {
   name: 'App',
@@ -105,26 +112,28 @@ export default {
 
   mounted () {
     window.app = this
-    const temp = localStorage.getItem('sghen_user_info')
-    const userInfo = JSON.parse(window.decodeURIComponent(window.atob(temp)) || '{}')
-    console.log(userInfo)
-    if (!userInfo || !userInfo.token || !userInfo.timeLogin || (Date.now() / 1000 - userInfo.timeLogin > 3600 * 24 * 7)) {
-      if (localStorage.getItem('login')) {
-        alert('登录失败，请手动刷新界面')
-        localStorage.removeItem('login')
-        return
-      }
-      localStorage.setItem('login', 1)
-      localStorage.removeItem('sghen_user_info')
-      window.location.href =
-          'https://www.sghen.cn/sghen-wap/index.html#/login?redirect=' +
-          encodeURIComponent(window.location.href) + '&rand=' + Date.now()
-      return
-    }
 
-    this.gameMain = new GameMain(this.$refs.canvas, userInfo)
-    this.gameMain.msgCall = this.msgCall.bind(this)
-    this.gameMain.scoreCall = this.scoreCall.bind(this)
+    // const temp = localStorage.getItem('sghen_user_info')
+    // const userInfo = JSON.parse(window.decodeURIComponent(window.atob(temp)) || '{}')
+    // console.log(userInfo)
+    // if (!userInfo || !userInfo.token || !userInfo.timeLogin || (Date.now() / 1000 - userInfo.timeLogin > 3600 * 24 * 7)) {
+    //   if (localStorage.getItem('login')) {
+    //     alert('登录失败，请手动刷新界面')
+    //     localStorage.removeItem('login')
+    //     return
+    //   }
+    //   localStorage.setItem('login', 1)
+    //   localStorage.removeItem('sghen_user_info')
+    //   window.location.href =
+    //       'https://www.sghen.cn/sghen-wap/index.html#/login?redirect=' +
+    //       encodeURIComponent(window.location.href) + '&rand=' + Date.now()
+    //   return
+    // }
+
+    // this.gameMain = new GameMain(this.$refs.canvas, userInfo)
+    // this.gameMain.msgCall = this.msgCall.bind(this)
+    // this.gameMain.scoreCall = this.scoreCall.bind(this)
+    this.game = new PhaserGame(this.$el)
 
     document.oncontextmenu = function () {
       return false
@@ -244,7 +253,10 @@ export default {
               (o) => o.identifier === this.barrelRadianID
             )
             const yRatio = (touch.clientY - rect.top) / rect.height
-            this.tankOptions.barrelRadian = Math.min(Math.max(Math.PI * 2 * yRatio, 0), Math.PI * 2)
+            this.tankOptions.barrelRadian = Math.min(
+              Math.max(Math.PI * 2 * yRatio, 0),
+              Math.PI * 2
+            )
           }
           break
         default:
@@ -411,7 +423,7 @@ canvas {
   left: 50%;
   width: 2rem;
   height: 100%;
-  background-color:rgba(105, 105, 105, 0.5);
+  background-color: rgba(105, 105, 105, 0.5);
   border-radius: 5px;
 }
 .tank-controller .speed-valve,
