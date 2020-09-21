@@ -1,6 +1,5 @@
 import Phaser from 'phaser'
-
-export default class extends Phaser.Physics.Arcade.Sprite {
+export default class Tank extends Phaser.GameObjects.Container {
   /**
    *
    * @param {Phaser.Scene} scene
@@ -8,39 +7,45 @@ export default class extends Phaser.Physics.Arcade.Sprite {
    * @param {Number} y
    */
   constructor (scene, x, y) {
-    super(scene, x, y, 'tank-00', 'tank-body')
-    scene.children.add(this)
-    scene.physics.add.existing(this)
-    this.scene = scene
-    // this.body = scene.physics.add.sprite(x, y, 'tank-00', 'tank-body')
-    // this.body.setBounce(0, 0)
-    this.setCollideWorldBounds(true)
+    super(scene, x, y)
+    this.tankSpeed = 0
+    this.tankTurn = 0
 
-    this.barrel = scene.add.image(this.x, this.y, 'tank-00', 'tank-barrel')
-    this.barrel.setOrigin(0.5, 0.3)
-    this.barrel.setPosition(x, y - 30)
-    this.barrel.active = false
+    this.tankBody = new Phaser.GameObjects.Image(scene, 0, 0, 'tank-00', 'tank-body')
+    this.add(this.tankBody)
 
+    this.tankBarrel = new Phaser.GameObjects.Image(scene, 0, -20, 'tank-00', 'tank-barrel')
+    this.tankBarrel.setOrigin(0.5, 0.3)
+    this.add(this.tankBarrel)
+
+    scene.physics.world.enable(this)
+    const { width, height } = this.tankBody
+    this.setSize(width * 0.9, height * 0.9)
+    this.setScale(0.5, 0.5)
+    this.body.setSize(width * 0.9, height * 0.9)
+    this.body.setCollideWorldBounds(true)
+
+    scene.add.existing(this)
     window.tank = this
   }
 
-  setVelocityX (v) {
-    super.setVelocityX(v)
-    // this.body.setVelocityX(v)
-    // this.barrel.setVelocityX(v)
+  setTankTurn (v) {
+    this.tankTurn = v || 0
   }
 
-  setVelocityY (v) {
-    super.setVelocityY(v)
-    // this.body.setVelocityY(v)
-    // this.barrel.setVelocityY(v)
+  setTankSpeed (v) {
+    this.tankSpeed = v || 0
   }
 
-  update (time, delta) {
-    // this.rotation += Math.PI / 100
-    // super.update(time, delta)
-    // this.scene.physics.velocityFromRotation(this.rotation, 100)
-    this.barrel.x = this.x
-    this.barrel.y = this.y - 30
+  update () {
+    if (this.tankTurn < 0) {
+      this.body.rotation -= Math.PI / 50
+    } else if (this.tankTurn > 0) {
+      this.body.rotation += Math.PI / 50
+    }
+    if (this.speed > 0) {
+      this.scene.physics.velocityFromRotation(this.body.rotation, this.speed, this.body.velocity)
+    }
+    // this.tankBarrel.rotation += Math.PI / 50
   }
 }

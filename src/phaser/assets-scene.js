@@ -3,7 +3,14 @@ import { toProgress } from '../utils/format'
 
 export default class extends Phaser.Scene {
   constructor () {
-    super({ key: 'assets-scene' })
+    super({
+      key: 'assets-scene'
+      // pack: {
+      //   files: [
+      //     { type: 'scenePlugin', key: 'SpinePlugin', url: 'plugins/SpinePlugin.js', sceneKey: 'spine' }
+      //   ]
+      // }
+    })
 
     this.totalToLoad = 0
     this.totalComplete = 0
@@ -38,6 +45,7 @@ export default class extends Phaser.Scene {
     this.load.image('enemy', require('@/images/enemy.png'))
     this.load.image('red', require('@/images/bullet.png'))
     this.load.atlas('tank-00', '/images/tank-00.png', 'images/tank-00.json')
+    // this.load.spine('spine-tank-00', '/images/spine-tank-00.json', '/images/spine-tank-00.atlas')
     this.load.start()
   }
   /**

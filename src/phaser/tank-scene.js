@@ -8,8 +8,8 @@ export default class extends Phaser.Scene {
   }
 
   preload () {
-  }
 
+  }
   create () {
     const { width, height } = this.game.config
     this.physics.world.setBounds(0, 0, width * 4, height * 3)
@@ -59,18 +59,18 @@ export default class extends Phaser.Scene {
     super.update(time, delta)
 
     if (this.cursors.down.isDown) {
-      this.tank.setVelocityY(500)
+      this.tank.setTankSpeed(-100)
     } else if (this.cursors.up.isDown) {
-      this.tank.setVelocityY(-500)
+      this.tank.setTankSpeed(100)
     } else {
-      this.tank.setVelocityY(0)
+      this.tank.setTankSpeed(0)
     }
     if (this.cursors.right.isDown) {
-      this.tank.setVelocityX(500)
+      this.tank.setTankTurn(1)
     } else if (this.cursors.left.isDown) {
-      this.tank.setVelocityX(-500)
+      this.tank.setTankTurn(-1)
     } else {
-      this.tank.setVelocityX(0)
+      this.tank.setTankTurn()
     }
 
     this.tank.update(time, delta)
