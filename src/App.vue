@@ -114,7 +114,7 @@ export default {
     window.app = this
 
     // const temp = localStorage.getItem('sghen_user_info')
-    // const userInfo = JSON.parse(window.decodeURIComponent(window.atob(temp)) || '{}')
+    // const userInfo = JSON.parse(window.decodeURIComponent(window.atob(temp || '')) || '{}')
     // console.log(userInfo)
     // if (!userInfo || !userInfo.token || !userInfo.timeLogin || (Date.now() / 1000 - userInfo.timeLogin > 3600 * 24 * 7)) {
     //   if (localStorage.getItem('login')) {
@@ -133,7 +133,7 @@ export default {
     // this.gameMain = new GameMain(this.$refs.canvas, userInfo)
     // this.gameMain.msgCall = this.msgCall.bind(this)
     // this.gameMain.scoreCall = this.scoreCall.bind(this)
-    this.game = new PhaserGame(this.$el)
+    this.game = new PhaserGame(this.$el, { username: 'Tank' })
 
     document.oncontextmenu = function () {
       return false

@@ -20,11 +20,17 @@ export default class extends Phaser.Game {
       height: parentEl.clientHeight * window.devicePixelRatio,
       parent: parentEl,
       physics: {
-        default: 'arcade',
-        arcade: {
+        default: 'matter',
+        matter: {
           debug: true,
           gravity: { y: 0 }
         }
+        // arcade物理引擎只支持AABB碰撞检测
+        // default: 'arcade',
+        // arcade: {
+        //   debug: true,
+        //   gravity: { y: 0 }
+        // }
       },
       scene: [AssetsScene, TankScene]
     })
@@ -77,6 +83,11 @@ export default class extends Phaser.Game {
       return
     }
     const { id } = JSON.parse(s)
-    console.log(id)
+    switch (id) {
+      case 100:
+        break
+      default:
+        break
+    }
   }
 }

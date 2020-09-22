@@ -1,5 +1,6 @@
 import Phaser from 'phaser'
 import Tank from './tank'
+import Explosion from './explosion'
 
 export default class extends Phaser.Scene {
   constructor () {
@@ -12,56 +13,60 @@ export default class extends Phaser.Scene {
   }
   create () {
     const { width, height } = this.game.config
-    this.physics.world.setBounds(0, 0, width * 4, height * 3)
+    this.matter.world.setBounds(0, 0, width * 4, height * 3)
     this.bg = this.add.tileSprite(0, 0, width * 4, height * 3, 'sky')
     this.bg.setOrigin(0, 0)
 
     // 将水平死区设置为0.5倍游戏宽度
     // this.cameras.main.setDeadzone(this.scale.width * 0.5, this.scale.height * 0.5)
 
-    // var particles = this.add.particles('red')
-    // var emitter = particles.createEmitter({
-    //   speed: 88,
-    //   scale: { start: 1, end: 0 },
-    //   blendMode: 'ADD'
-    // })
-    // emitter.startFollow(this.tank)
-
-    this.enemy = this.physics.add.image(width / 2, height / 2, 'enemy')
-    this.enemy.setVelocity(200, 250)
-    this.enemy.setBounce(1, 1)
-    this.enemy.setCollideWorldBounds(true)
-
     this.positionText = this.add.text(0, 0, 'Welcome...', { font: '32px Arial', fill: '#ffffff', align: 'center' })
     this.positionText.setScrollFactor(0, 0)
     this.positionText.setAlign('left')
 
-    // setTimeout(() => {
-    //   this.scene.start('tank-scene')
-    // }, 3000)
-
-    this.cursors = this.input.keyboard.createCursorKeys()
-
     this.tank = new Tank(this, 200, 300)
+    this.tank.setTankName(this.game.userInfo.username)
     this.cameras.main.startFollow(this.tank)
 
-    this.physics.add.collider(this.enemy, this.tank, () => {
-      this.enemy.setVelocity(200, 250)
+    this.matter.world.on('collisionstart', (e, body0, body1) => {
+      const obj0 = body0.gameObject
+      const obj1 = body1.gameObject
+
+      if (obj0 && obj0.getData('itemType') === 'bullet') {
+        const { x, y } = obj0
+        obj0.destroy()
+        this.newExplosion(x, y)
+      } else if (obj1 && obj1.getData('itemType') === 'bullet') {
+        const { x, y } = obj1
+        obj1.destroy()
+        this.newExplosion(x, y)
+      }
     })
+
+    this.cursors = this.input.keyboard.createCursorKeys()
+  }
+
+  newExplosion (x, y) {
+    new Explosion(this, x, y)
+  }
+
+  newTank (x, y) {
+    new Tank(this, x, y)
   }
 
   onPause () {
-    this.physics.pause()
+    this.matter.pause()
+    // this.physics.pause()
     // this.physics.resume()
   }
 
   update (time, delta) {
-    super.update(time, delta)
+    // super.update(time, delta)
 
     if (this.cursors.down.isDown) {
-      this.tank.setTankSpeed(-100)
+      this.tank.setTankSpeed(-5)
     } else if (this.cursors.up.isDown) {
-      this.tank.setTankSpeed(100)
+      this.tank.setTankSpeed(5)
     } else {
       this.tank.setTankSpeed(0)
     }
@@ -74,7 +79,7 @@ export default class extends Phaser.Scene {
     }
 
     this.tank.update(time, delta)
-    const { x, y } = this.tank.body
+    const { x, y } = this.tank
     this.positionText.setText(`x:${x >> 0}\ny:${y >> 0}`)
   }
 }
