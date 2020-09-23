@@ -108,6 +108,7 @@ export default class Tank extends Phaser.GameObjects.Container {
     bullet.setScale(0.3, 0.3)
     bullet.setFriction(0, 0, 0)
     bullet.setMass(0.5)
+    bullet.setFixedRotation()
     bullet.setVelocity(this.bulletSpeed * Math.cos(radian), this.bulletSpeed * Math.sin(radian))
     bullet.setData('itemType', 'bullet')
     this.bulletCount--

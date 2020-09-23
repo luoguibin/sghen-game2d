@@ -1,6 +1,7 @@
 import Phaser from 'phaser'
 import Tank from './tank'
 import Explosion from './explosion'
+import Enemies from './enemies'
 
 export default class extends Phaser.Scene {
   constructor () {
@@ -44,6 +45,8 @@ export default class extends Phaser.Scene {
     })
 
     this.cursors = this.input.keyboard.createCursorKeys()
+
+    this.enemies = new Enemies(this)
   }
 
   newExplosion (x, y) {
@@ -79,6 +82,8 @@ export default class extends Phaser.Scene {
     }
 
     this.tank.update(time, delta)
+    this.enemies.update(time, delta, this.tank)
+
     const { x, y } = this.tank
     this.positionText.setText(`x:${x >> 0}\ny:${y >> 0}`)
   }
