@@ -50,6 +50,7 @@ export default class Tank extends Phaser.GameObjects.Container {
     })
     this.setTankFriction()
     this.setScale(0.5, 0.5)
+    this.setRotation(-Math.PI / 2)
     this.setMass(250)
     this.setData('itemType', 'tank')
     scene.add.existing(this)
