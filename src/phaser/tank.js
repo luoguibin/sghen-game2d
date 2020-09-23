@@ -140,9 +140,9 @@ export default class Tank extends Phaser.GameObjects.Container {
     }
 
     if (this.barrelTurn > 0) {
-      this.tankBarrel.rotation += Math.PI / 50
+      this.tankBarrel.rotation += Math.PI / 80
     } else if (this.barrelTurn < 0) {
-      this.tankBarrel.rotation -= Math.PI / 50
+      this.tankBarrel.rotation -= Math.PI / 80
     }
     this.tankName.rotation = -this.rotation
   }

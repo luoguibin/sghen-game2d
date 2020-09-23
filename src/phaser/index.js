@@ -32,6 +32,7 @@ export default class extends Phaser.Game {
         //   gravity: { y: 0 }
         // }
       },
+      disableContextMenu: true,
       scene: [AssetsScene, TankScene]
     })
     this.userInfo = userInfo

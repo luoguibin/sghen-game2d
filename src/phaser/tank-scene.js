@@ -2,6 +2,7 @@ import Phaser from 'phaser'
 import Tank from './tank'
 import Explosion from './explosion'
 import Enemies from './enemies'
+import Joystick from './joystick'
 
 export default class extends Phaser.Scene {
   constructor () {
@@ -47,6 +48,27 @@ export default class extends Phaser.Scene {
     this.cursors = this.input.keyboard.createCursorKeys()
 
     this.enemies = new Enemies(this)
+    this.joystick = new Joystick(this, (key, v0, v1) => {
+      switch (key) {
+        case 'direction': {
+          const speed = 5 * (Math.round(v0 * 5) >> 0) / 5
+          const turn = (Math.round(v1 * 3) >> 0) / 3
+          // console.log(speed, turn)
+
+          this.tank.setTankSpeed(speed)
+          this.tank.setTankTurn(turn)
+        }
+          break
+        case 'barrel':
+          this.tank.setTankBarrelTurn(v0)
+          break
+        case 'fire':
+          this.tank.fire()
+          break
+        default:
+          break
+      }
+    })
   }
 
   newExplosion (x, y) {
@@ -66,23 +88,24 @@ export default class extends Phaser.Scene {
   update (time, delta) {
     // super.update(time, delta)
 
-    if (this.cursors.down.isDown) {
-      this.tank.setTankSpeed(-5)
-    } else if (this.cursors.up.isDown) {
-      this.tank.setTankSpeed(5)
-    } else {
-      this.tank.setTankSpeed(0)
-    }
-    if (this.cursors.right.isDown) {
-      this.tank.setTankTurn(1)
-    } else if (this.cursors.left.isDown) {
-      this.tank.setTankTurn(-1)
-    } else {
-      this.tank.setTankTurn()
-    }
+    // if (this.cursors.down.isDown) {
+    //   this.tank.setTankSpeed(-5)
+    // } else if (this.cursors.up.isDown) {
+    //   this.tank.setTankSpeed(5)
+    // } else {
+    //   this.tank.setTankSpeed(0)
+    // }
+    // if (this.cursors.right.isDown) {
+    //   this.tank.setTankTurn(1)
+    // } else if (this.cursors.left.isDown) {
+    //   this.tank.setTankTurn(-1)
+    // } else {
+    //   this.tank.setTankTurn()
+    // }
 
     this.tank.update(time, delta)
     this.enemies.update(time, delta, this.tank)
+    this.joystick.update(time, delta)
 
     const { x, y } = this.tank
     this.positionText.setText(`x:${x >> 0}\ny:${y >> 0}`)
