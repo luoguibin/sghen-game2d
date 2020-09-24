@@ -18,7 +18,9 @@ export default class extends Phaser.Game {
       type: Phaser.AUTO,
       width: parentEl.clientWidth * window.devicePixelRatio,
       height: parentEl.clientHeight * window.devicePixelRatio,
+      // resolution: window.devicePixelRatio || 1,
       parent: parentEl,
+      antialias: true,
       physics: {
         default: 'matter',
         matter: {
