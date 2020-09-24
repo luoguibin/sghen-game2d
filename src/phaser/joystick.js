@@ -17,6 +17,7 @@ export default class Joystick {
     this.y = scene.game.config.height - 120 * RATIO
 
     scene.input.topOnly = false
+    scene.input.addPointer(3)
     scene.input.on('pointerdown', this.onPointerDown.bind(this))
     scene.input.on('pointerup', this.onPointerUp.bind(this))
     scene.input.on('drag', this.onDrag.bind(this))
