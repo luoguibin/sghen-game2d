@@ -60,7 +60,7 @@
 
 <script>
 // import GameMain from './js/main'
-import PhaserGame from './phaser/index'
+import PhaserGame from './game/index'
 
 export default {
   name: 'App',

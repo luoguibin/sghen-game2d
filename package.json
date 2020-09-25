@@ -10,7 +10,6 @@
   "dependencies": {
     "core-js": "^3.6.5",
     "lodash": "^4.17.20",
-    "phaser": "^3.24.1",
     "vue": "^2.6.11"
   },
   "devDependencies": {
