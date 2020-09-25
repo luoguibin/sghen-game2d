@@ -106,7 +106,7 @@ export default {
   mounted () {
     window.app = this
     const temp = localStorage.getItem('sghen_user_info')
-    const userInfo = JSON.parse(window.decodeURIComponent(window.atob(temp)) || '{}')
+    const userInfo = JSON.parse(window.decodeURIComponent(window.atob(temp || '')) || '{}')
     console.log(userInfo)
     if (!userInfo || !userInfo.token || !userInfo.timeLogin || (Date.now() / 1000 - userInfo.timeLogin > 3600 * 24 * 7)) {
       if (localStorage.getItem('login')) {
