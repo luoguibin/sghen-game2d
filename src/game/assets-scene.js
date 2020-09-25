@@ -39,7 +39,7 @@ export default class AssetsScene extends Phaser.Scene {
    * 开始加载资源
    */
   startToLoad () {
-    // this.load.setBaseURL('./')
+    this.load.setBaseURL('./')
     this.load.image('sky', require('@/images/cizhuan-00.png'))
     this.load.image('hero', require('@/images/hero.png'))
     this.load.image('enemy', require('@/images/enemy.png'))
