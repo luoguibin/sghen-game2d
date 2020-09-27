@@ -1,6 +1,6 @@
-import Phaser from '/phaser'
+import Phaser from 'phaser'
 
-// const RATIO = Math.min(window.devicePixelRatio || 1, 2.5)
+const RATIO = Math.min(window.devicePixelRatio || 1, 2.5)
 
 /**
  * 游戏摇杆
@@ -13,8 +13,8 @@ export default class Joystick {
   constructor (scene, call) {
     this.scene = scene
     this.call = call || function () {}
-    this.x = 120
-    this.y = scene.game.config.height - 120
+    this.x = 120 * RATIO
+    this.y = scene.game.config.height - 120 * RATIO
 
     scene.input.topOnly = false
     scene.input.addPointer(3)
@@ -23,29 +23,34 @@ export default class Joystick {
     scene.input.on('drag', this.onDrag.bind(this))
 
     // 方向摇杆
-    this.bg = scene.add.circle(this.x, this.y, 100, 0xeeeeee, 0.3)
+    this.bg = scene.add.circle(this.x, this.y, 100 * RATIO, 0xeeeeee, 0.3)
     this.bg.setScrollFactor(0, 0)
-    this.stick = scene.add.circle(this.x, this.y, 30, 0x148acf)
+    this.bg.setDepth(1)
+    this.stick = scene.add.circle(this.x, this.y, 30 * RATIO, 0x148acf)
     this.stick.setScrollFactor(0, 0)
+    this.stick.setDepth(1)
     this.stick.setInteractive({
       draggable: true
     })
     this.stick.setData('itemType', 'stick')
 
-    this.bx = scene.game.config.width - 120
+    this.bx = scene.game.config.width - 120 * RATIO
     this.by = this.y
-    this.barrelLeft = scene.add.circle(this.bx, this.by, 25, 0xeeeeee, 0.3)
+    this.barrelLeft = scene.add.circle(this.bx, this.by, 25 * RATIO, 0xeeeeee, 0.3)
     this.barrelLeft.setScrollFactor(0, 0)
+    this.barrelLeft.setDepth(1)
     this.barrelLeft.setInteractive()
     this.barrelLeft.setData('itemType', 'barrelLeft')
 
-    this.barrelRight = scene.add.circle(this.bx + 70, this.by, 25, 0xeeeeee, 0.3)
+    this.barrelRight = scene.add.circle(this.bx + 70 * RATIO, this.by, 25 * RATIO, 0xeeeeee, 0.3)
     this.barrelRight.setScrollFactor(0, 0)
+    this.barrelRight.setDepth(1)
     this.barrelRight.setInteractive()
     this.barrelRight.setData('itemType', 'barrelRight')
 
-    this.fire = scene.add.circle(this.bx + 35, this.by + 70, 35, 0xeeeeee, 0.3)
+    this.fire = scene.add.circle(this.bx + 35 * RATIO, this.by + 70 * RATIO, 35 * RATIO, 0xeeeeee, 0.3)
     this.fire.setScrollFactor(0, 0)
+    this.fire.setDepth(1)
     this.fire.setInteractive()
     this.fire.setData('itemType', 'fire')
 

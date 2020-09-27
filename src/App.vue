@@ -32,34 +32,10 @@
       </div>
       <button class="block" @click="onToggleScore">{{scoreVisible ? '收起' : '排行榜'}}</button>
     </div>
-
-    <div
-      v-if="false"
-      class="tank-controller"
-      @touchstart="handleTouchStart"
-      @touchmove="handleTouchMove"
-    >
-      <div class="wrapper">
-        <div class="fire" item-type="fire">开火</div>
-        <div class="left-valve">
-          <span class="pointer" item-type="left-valve" :style="leftValveStyle">左档</span>
-        </div>
-        <div class="right-valve">
-          <span class="pointer" item-type="right-valve" :style="rightValveStyle">右档</span>
-        </div>
-        <div class="speed-valve">
-          <span class="pointer" item-type="speed-valve" :style="speedValveStyle">油门</span>
-        </div>
-        <div class="barrel-radian">
-          <span class="pointer" item-type="barrel-radian" :style="barrelRadianStyle">炮角</span>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
 <script>
-// import GameMain from './js/main'
 import PhaserGame from './game/index'
 
 export default {
@@ -113,27 +89,26 @@ export default {
   mounted () {
     window.app = this
 
-    // const temp = localStorage.getItem('sghen_user_info')
-    // const userInfo = JSON.parse(window.decodeURIComponent(window.atob(temp || '')) || '{}')
-    // console.log(userInfo)
-    // if (!userInfo || !userInfo.token || !userInfo.timeLogin || (Date.now() / 1000 - userInfo.timeLogin > 3600 * 24 * 7)) {
-    //   if (localStorage.getItem('login')) {
-    //     alert('登录失败，请手动刷新界面')
-    //     localStorage.removeItem('login')
-    //     return
-    //   }
-    //   localStorage.setItem('login', 1)
-    //   localStorage.removeItem('sghen_user_info')
-    //   window.location.href =
-    //       'https://www.sghen.cn/sghen-wap/index.html#/login?redirect=' +
-    //       encodeURIComponent(window.location.href) + '&rand=' + Date.now()
-    //   return
-    // }
+    const temp = localStorage.getItem('sghen_user_info')
+    const userInfo = JSON.parse(window.decodeURIComponent(window.atob(temp || '')) || '{}')
+    console.log(userInfo)
+    if (!userInfo || !userInfo.token || !userInfo.timeLogin || (Date.now() / 1000 - userInfo.timeLogin > 3600 * 24 * 7)) {
+      if (localStorage.getItem('login')) {
+        alert('登录失败，请手动刷新界面')
+        localStorage.removeItem('login')
+        return
+      }
+      localStorage.setItem('login', 1)
+      localStorage.removeItem('sghen_user_info')
+      window.location.href =
+          'https://www.sghen.cn/sghen-wap/index.html#/login?redirect=' +
+          encodeURIComponent(window.location.href) + '&rand=' + Date.now()
+      return
+    }
 
-    // this.gameMain = new GameMain(this.$refs.canvas, userInfo)
     // this.gameMain.msgCall = this.msgCall.bind(this)
     // this.gameMain.scoreCall = this.scoreCall.bind(this)
-    this.game = new PhaserGame(this.$el, { username: 'Tank' })
+    this.game = new PhaserGame(this.$el, userInfo)
 
     document.oncontextmenu = function () {
       return false
@@ -174,99 +149,6 @@ export default {
     },
     onToggleScore () {
       this.scoreVisible = !this.scoreVisible
-    },
-    onFire () {
-      this.gameMain.fire()
-    },
-
-    handleTouchStart (e) {
-      const itemType = e.target.getAttribute('item-type')
-      if (!itemType) {
-        return
-      }
-      const touches = e.touches
-      const lastTouch = touches[touches.length - 1]
-
-      switch (itemType) {
-        case 'fire':
-          this.onFire()
-          break
-        case 'left-valve':
-          this.leftValveID = lastTouch.identifier
-          break
-        case 'right-valve':
-          this.rightValveID = lastTouch.identifier
-          break
-        case 'speed-valve':
-          this.speedValveID = lastTouch.identifier
-          break
-        case 'barrel-radian':
-          this.barrelRadianID = lastTouch.identifier
-          break
-        default:
-          break
-      }
-    },
-
-    handleTouchMove (e) {
-      const itemType = e.target.getAttribute('item-type')
-      if (!itemType) {
-        return
-      }
-      const touches = [...e.touches]
-      const rect = e.target.parentElement.getBoundingClientRect()
-
-      switch (itemType) {
-        case 'left-valve':
-          {
-            const touch = touches.find(
-              (o) => o.identifier === this.leftValveID
-            )
-            const yRatio = (touch.clientY - rect.top) / rect.height
-            const valve = Math.min(Math.max(1 - yRatio * 2, -1), 1)
-            this.tankOptions.leftValve = (Math.round(valve * 5) >> 0) / 5
-          }
-          break
-        case 'right-valve':
-          {
-            const touch = touches.find(
-              (o) => o.identifier === this.rightValveID
-            )
-            const yRatio = (touch.clientY - rect.top) / rect.height
-            const valve = Math.min(Math.max(1 - yRatio * 2, -1), 1)
-            this.tankOptions.rightValve = (Math.round(valve * 5) >> 0) / 5
-          }
-          break
-        case 'speed-valve':
-          {
-            const touch = touches.find(
-              (o) => o.identifier === this.speedValveID
-            )
-            const yRatio = (touch.clientY - rect.top) / rect.height
-            const valve = Math.min(Math.max(1 - yRatio, 0), 1)
-            this.tankOptions.speedValve = (Math.round(valve * 10) >> 0) / 10
-          }
-          break
-        case 'barrel-radian':
-          {
-            const touch = touches.find(
-              (o) => o.identifier === this.barrelRadianID
-            )
-            const yRatio = (touch.clientY - rect.top) / rect.height
-            this.tankOptions.barrelRadian = Math.min(
-              Math.max(Math.PI * 2 * yRatio, 0),
-              Math.PI * 2
-            )
-          }
-          break
-        default:
-          break
-      }
-      if (itemType.includes('valve')) {
-        this.gameMain.setTankValves(this.tankOptions)
-      } else {
-        this.gameMain.setTankRadians(this.tankOptions)
-      }
     }
   }
 }

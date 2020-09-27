@@ -1,4 +1,4 @@
-import Phaser from '/phaser'
+import Phaser from 'phaser'
 import { toProgress } from '../utils/format'
 
 export default class AssetsScene extends Phaser.Scene {
@@ -44,6 +44,7 @@ export default class AssetsScene extends Phaser.Scene {
     this.load.image('hero', require('@/images/hero.png'))
     this.load.image('enemy', require('@/images/enemy.png'))
     this.load.image('bullet', require('@/images/bullet.png'))
+    this.load.image('xiangzi-00', require('@/images/xiangzi-00.png'))
     this.load.spritesheet('explosions', require('@/images/explosions.png'), {
       frameWidth: 64,
       frameHeight: 48,

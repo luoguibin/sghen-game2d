@@ -1,4 +1,4 @@
-import Phaser from '/phaser'
+import Phaser from 'phaser'
 
 /**
  * 坦克实体，只包含一个矩形碰撞
@@ -55,10 +55,15 @@ export default class Tank extends Phaser.GameObjects.Container {
     this.setData('itemType', 'tank')
     scene.add.existing(this)
 
+    setInterval(() => {
+      this.addBulletCount()
+    }, 1000)
     window.tank = this
   }
 
-  setTankName (name) {
+  setTankName (id, name) {
+    this.id = id
+    this.setName(id)
     this.tankName.setText(name)
     this.userName = name
   }
@@ -95,14 +100,7 @@ export default class Tank extends Phaser.GameObjects.Container {
   /**
    * 发射炮弹
    */
-  fire () {
-    if (!this.bulletCount) {
-      return
-    }
-    const radian = this.getBarrelRadian()
-    // 避免炮塔自身与炮弹直接碰撞
-    const x = this.x + Math.cos(radian) * 63
-    const y = this.y + Math.sin(radian) * 63
+  fire ({ x, y, radian }) {
     const bullet = this.scene.matter.add.image(x, y, 'bullet')
     bullet.setRotation(radian + Math.PI / 2)
     bullet.setScale(0.3, 0.3)
@@ -111,8 +109,19 @@ export default class Tank extends Phaser.GameObjects.Container {
     bullet.setFixedRotation()
     bullet.setVelocity(this.bulletSpeed * Math.cos(radian), this.bulletSpeed * Math.sin(radian))
     bullet.setData('itemType', 'bullet')
-    this.bulletCount--
+    bullet.setData('tankId', this.id)
     return bullet
+  }
+  getBullet () {
+    if (!this.bulletCount) {
+      return
+    }
+    const radian = this.getBarrelRadian()
+    // 避免炮塔自身与炮弹直接碰撞
+    const x = this.x + Math.cos(radian) * 63
+    const y = this.y + Math.sin(radian) * 63
+    this.bulletCount--
+    return { radian, x, y }
   }
   /**
    * 添加炮弹数
@@ -140,9 +149,9 @@ export default class Tank extends Phaser.GameObjects.Container {
     }
 
     if (this.barrelTurn > 0) {
-      this.tankBarrel.rotation += Math.PI / 80
+      this.tankBarrel.rotation += Math.PI / 120
     } else if (this.barrelTurn < 0) {
-      this.tankBarrel.rotation -= Math.PI / 80
+      this.tankBarrel.rotation -= Math.PI / 120
     }
     this.tankName.rotation = -this.rotation
   }
