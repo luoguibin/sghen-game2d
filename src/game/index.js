@@ -1,4 +1,4 @@
-import Phaser from '../phaser/src/phaser'
+import Phaser from '/phaser'
 import AssetsScene from './assets-scene'
 import TankScene from './tank-scene'
 import { WS_URL } from '../const'

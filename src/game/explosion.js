@@ -1,4 +1,4 @@
-import Phaser from '../phaser/src/phaser'
+import Phaser from '/phaser'
 
 export default class Explosion extends Phaser.GameObjects.Sprite {
   /**

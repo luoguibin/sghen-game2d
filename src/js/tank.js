@@ -1,7 +1,7 @@
 import {
   WINDOW_WIDTH,
   WINDOW_HEIGHT
-} from './const'
+} from '../game/const'
 import Bullet from './bullet'
 import Explosion from './explosion'
 import { getDistance } from './utils'

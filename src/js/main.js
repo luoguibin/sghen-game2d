@@ -6,7 +6,7 @@ import {
   WINDOW_HEIGHT,
   CANVAS_WIDTH,
   CANVAS_HEIGHT
-} from './const'
+} from '../game/const'
 import { ACTION, PLAYER, SKILL, SYSTEM, newOrder } from './order'
 // import Player from './player'
 import Tank from './tank'

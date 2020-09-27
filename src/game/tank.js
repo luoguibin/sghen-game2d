@@ -1,4 +1,4 @@
-import Phaser from '../phaser/src/phaser'
+import Phaser from '/phaser'
 
 /**
  * 坦克实体，只包含一个矩形碰撞

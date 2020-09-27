@@ -1,4 +1,4 @@
-import Phaser from '../phaser/src/phaser'
+import Phaser from '/phaser'
 import Tank from './tank'
 import Explosion from './explosion'
 import Enemies from './enemies'

@@ -1,4 +1,4 @@
-import Phaser from '../phaser/src/phaser'
+import Phaser from '/phaser'
 import { toProgress } from '../utils/format'
 
 export default class AssetsScene extends Phaser.Scene {

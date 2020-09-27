@@ -1,4 +1,4 @@
-import Phaser from '../phaser/src/phaser'
+import Phaser from '/phaser'
 
 // const RATIO = Math.min(window.devicePixelRatio || 1, 2.5)
 
