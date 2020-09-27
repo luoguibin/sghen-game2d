@@ -302,9 +302,9 @@ export default class extends Phaser.Scene {
   }
 
   newExplosion (x, y, tankId, obstacle) {
-    if (this.tank.id === tankId) {
-      return
-    }
+    // if (this.player.id === tankId) {
+    //   return
+    // }
     new Explosion(this, x, y)
   }
 
@@ -324,7 +324,7 @@ export default class extends Phaser.Scene {
 
     if (this.player) {
       const { x, y } = this.player
-      this.positionText.setText(`x:${x >> 0}\ny:${y >> 0}`)
+      this.positionText.setText([`x:${x >> 0}\ny:${y >> 0}`, this.player.score])
     }
   }
 }

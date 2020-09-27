@@ -22,6 +22,7 @@ export default class Tank extends Phaser.GameObjects.Container {
     this.bulletSpeed = 20
     this.bulletMax = 30
     this.bulletCount = 30
+    this.score = 0
 
     // 底盘
     this.tankBody = new Phaser.GameObjects.Image(scene, 0, 0, 'tank-00', 'tank-body')
