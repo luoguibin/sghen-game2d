@@ -12,3 +12,8 @@ export const CANVAS_HEIGHT = PIXEL_RATIO * WINDOW_HEIGHT
  */
 export const WS_URL = 'wss://www.sghen.cn/ggapi/auth/game2d'
 // export const WS_URL = 'ws://10.48.84.235:8282/auth/game2d'
+
+/**
+ * 心跳时间间隔
+ */
+export const HEART_DELAY = 10000

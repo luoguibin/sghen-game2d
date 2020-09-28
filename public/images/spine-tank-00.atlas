@@ -1,0 +1,19 @@
+spine-tank-00.png
+size: 264,254
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+body
+  rotate: false
+  xy: 0, 0
+  size: 132, 242
+  orig: 132, 242
+  offset: 0, 0
+  index: -1
+barrel
+  rotate: false
+  xy: 160, 80
+  size: 78, 175
+  orig: 282, 282
+  offset: 0, 0
+  index: -1
