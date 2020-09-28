@@ -6,7 +6,7 @@ import { WS_URL } from '../const'
 import { ACTION, PLAYER, SKILL, SYSTEM, newOrder } from './order'
 import { throttle } from 'lodash'
 
-export default class extends Phaser.Scene {
+export default class TankScene extends Phaser.Scene {
   constructor () {
     super({ key: 'tank-scene' })
 
@@ -251,7 +251,7 @@ export default class extends Phaser.Scene {
         })
         break
       case SYSTEM.MESSAGE:
-        this.msgCall({
+        this.game.msgCall({
           id: Date.now(),
           fromName: fromPlayer.userName,
           content: data
@@ -270,9 +270,11 @@ export default class extends Phaser.Scene {
     obstacle.setData('obstacleData', o)
     obstacle.setScale(0.2, 0.2)
     if (o.type === 'add') {
-      obstacle.setTint(0x148acf)
+      //
     } else if (o.type === 'add-all') {
-      obstacle.setTint(0xcf148a)
+      //
+    } else {
+      obstacle.setTint(0x148acf)
     }
     // type、value
   }
@@ -290,6 +292,13 @@ export default class extends Phaser.Scene {
       new Explosion(this, x, y)
       obstacle.destroy()
     }
+    this.game.scoreCall(this.players.map(o => {
+      return {
+        id: o.id,
+        userName: o.userName,
+        score: o.score
+      }
+    }))
   }
 
   newExplosion (bullet, obtacle) {
