@@ -174,7 +174,7 @@ export default class extends Phaser.Game {
    */
   sendText (text) {
     this.events.emit('order-send', Order.new(Order.MSG, null, {
-      userName: this.playerInfo.userName,
+      userName: this.playerInfo.username,
       content: text
     }))
   }
