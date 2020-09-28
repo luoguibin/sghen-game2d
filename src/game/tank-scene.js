@@ -2,16 +2,27 @@ import Phaser from 'phaser'
 import Tank from './tank'
 import Explosion from './explosion'
 import Joystick from './joystick'
-import { WS_URL } from '../const'
-import { ACTION, PLAYER, SKILL, SYSTEM, newOrder } from './order'
+import Order from './order'
 import { throttle } from 'lodash'
 
 export default class TankScene extends Phaser.Scene {
+  /**
+   * 地图信息
+   */
+  gameMap = null
+
+  /**
+   * 玩家自身
+   */
+  player = null
+
+  /**
+   * 所有玩家集合
+   */
+  players = []
+
   constructor () {
     super({ key: 'tank-scene' })
-
-    this.player = null
-    this.players = []
 
     this.handleDirection = throttle(this._handleDirection, 200, { leading: true })
     this.handleBarrel = throttle(this._handleBarrel, 200, { leading: true })
@@ -20,12 +31,12 @@ export default class TankScene extends Phaser.Scene {
   }
 
   preload () {
-
   }
+
   create () {
     const { width, height } = this.game.config
-    this.matter.world.setBounds(0, 0, width * 4, height * 3)
-    this.bg = this.add.tileSprite(0, 0, width * 4, height * 3, 'sky')
+    this.matter.world.setBounds(0, 0, width, height)
+    this.bg = this.add.tileSprite(0, 0, width, height, 'sky')
     this.bg.setOrigin(0, 0)
 
     // 将水平死区设置为0.5倍游戏宽度
@@ -54,7 +65,7 @@ export default class TankScene extends Phaser.Scene {
           break
         case 'fire': {
           const o = this.player.getBullet()
-          o && this.sendMsg(newOrder(SKILL.START, PLAYER.ALL, o))
+          o && this.sendOrder(Order.new(Order.SKILL_START, null, o))
         }
           break
         default:
@@ -62,32 +73,114 @@ export default class TankScene extends Phaser.Scene {
       }
     })
 
-    this.initWS()
+    this.game.events.on('order-deal', (o) => {
+      console.log('order-deal', o)
+      this.dealOrder(o)
+    })
+
+    // 请求进入场景
+    this.sendOrder(Order.new(Order.ENTER_MAP))
   }
 
   /**
-   * 初始化WebSocket通信
+   * 发送指令
+   * @param {Object} order
    */
-  initWS () {
-    const socket = new WebSocket(`${WS_URL}?token=${this.game.userInfo.token}`)
-    socket.addEventListener('open', () => {
-      console.log('socket is open')
-      this.ws = socket
-      socket.addEventListener('message', (event) => {
-        this.parseOrder(event.data)
-      })
-    })
+  sendOrder (order) {
+    if (this.gameMap) {
+      order.sceneId = this.gameMap.id
+    }
 
-    socket.addEventListener('close', () => {
-      console.log('socket is closed')
-      this.ws = null
-    })
+    this.game.events.emit('order-send', order)
   }
+
+  /**
+   * 解析指令
+   */
+  dealOrder (order) {
+    const { id, fromId, data } = order
+    const fromPlayer = this.children.getByName(fromId)
+
+    switch (id) {
+      case Order.ENTER_MAP: {
+        const info = data.player
+        const player = new Tank(this, info.x, info.y, info.id, info.userName)
+        if (info.id === this.game.playerInfo.id) {
+          // 重置地图信息
+          this.gameMap = data.map
+          const { width, height } = this.gameMap
+          this.matter.world.setBounds(0, 0, width, height)
+          this.bg.setSize(width, height)
+
+          // 镜头跟随
+          this.cameras.main.startFollow(player)
+          this.players = [player]
+          this.player = player
+
+          this.sendOrder(Order.new(Order.MAP_PLAYER_DATAS, null, { boxes: true }))
+        } else {
+          this.players.push(player)
+        }
+      }
+        break
+      case Order.MAP_PLAYER_DATAS: {
+        /** @type {Array} */
+        const playerList = data.players || []
+        playerList.forEach(info => {
+          this.players.push(new Tank(this, info.x, info.y, info.id, info.userName))
+        })
+
+        // 箱子信息
+        /** @type {Array} */
+        const boxList = data.boxes || []
+        boxList.forEach(o => {
+          this.newObstacle(o)
+        })
+      }
+        break
+      case Order.PLAYER_LOGOUT: {
+        /** @type {Array} */
+        const list = data || []
+        list.forEach(v => {
+          const i = this.players.indexOf(o => o.id === v)
+          if (i >= 0) {
+            const player = this.players[i]
+            player.destroy()
+            this.players.splice(i, 1)
+          }
+        })
+      }
+        break
+      case Order.MOTION:
+        fromPlayer.setTankSpeed(data.speed)
+        fromPlayer.setTankTurn(data.turn)
+        break
+      case Order.MOTION_BARREL:
+        fromPlayer.setTankBarrelTurn(data.value)
+        break
+      case Order.SKILL_START:
+        fromPlayer.fire(data)
+        break
+      case Order.SKILL_HIT:
+        this.handleHit(fromPlayer, data)
+        break
+      case Order.MAP_BOXES: {
+        const boxList = data || []
+        boxList.forEach(o => {
+          this.newObstacle(o)
+        })
+      }
+        break
+      default:
+        break
+    }
+  }
+
   _handleDirection (speed, turn) {
-    this.sendMsg(newOrder(ACTION.MOVING, PLAYER.ALL, { speed, turn }))
+    this.sendOrder(Order.new(Order.MOTION, Order.ALL, { speed, turn }))
   }
   _handleBarrel (value) {
-    this.sendMsg(newOrder(ACTION.BARREL, PLAYER.ALL, { value }))
+    this.sendOrder(Order.new(Order.MOTION_BARREL, Order.ALL, { value }))
   }
   /**
    * @param {Phaser.GameObjects} obj0
@@ -126,139 +219,6 @@ export default class TankScene extends Phaser.Scene {
           obj1.destroy()
           break
       }
-    }
-  }
-  /**
-   * 发送指令
-   */
-  sendMsg (o) {
-    if (!this.ws) {
-      return
-    }
-    if (!o.fromId) {
-      o.fromId = this.game.getUserId()
-    }
-    o.sceneId = this.gameMap.id
-    this.ws.send(JSON.stringify(o))
-  }
-  sendText (text) {
-    this.sendMsg(newOrder(SYSTEM.MESSAGE, PLAYER.ALL, text))
-  }
-  /**
-   * 解析指令
-   * @param {*} s
-   */
-  parseOrder (msg) {
-    if (!msg) {
-      return
-    }
-    const { id, fromId, data } = JSON.parse(msg)
-    const fromPlayer = this.children.getByName(fromId)
-
-    switch (id) {
-      case PLAYER.RECONNECT:
-      case PLAYER.LOGIN: {
-        // 初始化登录的玩家
-        const newPlayer = new Tank(this, 200, 200)
-        newPlayer.setTankName(this.game.getUserId(), this.game.getUserName())
-        if (data.actionOrder) {
-          const position = data.actionOrder.data
-          if (position.x !== undefined) {
-            newPlayer.setPosition(position.x, position.y)
-          }
-        }
-
-        this.cameras.main.startFollow(newPlayer)
-        this.players = [newPlayer]
-        this.player = newPlayer
-        this.heartId = setInterval(() => {
-          this.sendMsg(newOrder(PLAYER.HEART))
-        }, 8000)
-      }
-        break
-      case PLAYER.LOGOUT: {
-        const ids = data || []
-        ids.forEach(v => {
-          const i = this.players.indexOf(o => o.id === v)
-          if (i >= 0) {
-            const player = this.players[i]
-            player.destroy()
-            this.players.splice(i, 1)
-          }
-        })
-      }
-        break
-      case ACTION.ENTER_MAP:
-        if (fromId === SYSTEM.GOD) {
-          // 用户进入场景，并获取到场景中的用户列表
-          this.gameMap = data.map
-          const selfId = this.player.id
-          data.players.forEach(o => {
-            if (o.id !== selfId) {
-              const newPlayer = new Tank(o.id, o.username)
-              if (o.actionOrder) {
-                const { data } = o.actionOrder
-                if (data.x !== undefined) {
-                  newPlayer.setPosition(data.x, data.y)
-                }
-              }
-              this.players.push(newPlayer)
-            }
-          })
-          data.obstacles.forEach(o => {
-            this.newObstacle(o)
-          })
-        } else {
-          if (fromPlayer) {
-            if (data.actionOrder) {
-              const position = data.actionOrder.data
-              if (position.x !== undefined) {
-                fromPlayer.x = position.x
-                fromPlayer.y = position.y
-              }
-              if (data.actionOrder.id === ACTION.VALVES) {
-                fromPlayer.walk(data.direction)
-              }
-            }
-            return
-          }
-          const newPlayer = new Tank(data.id, data.username)
-          if (data.actionOrder) {
-            const position = data.actionOrder.data
-            if (position.x !== undefined) {
-              newPlayer.setPosition(position.x, position.y)
-            }
-          }
-          this.players.push(newPlayer)
-        }
-        break
-      case ACTION.MOVING:
-        fromPlayer.setTankSpeed(data.speed)
-        fromPlayer.setTankTurn(data.turn)
-        break
-      case ACTION.BARREL:
-        fromPlayer.setTankBarrelTurn(data.value)
-        break
-      case SKILL.START:
-        fromPlayer.fire(data)
-        break
-      case SKILL.HIT:
-        this.handleHit(fromPlayer, data)
-        break
-      case SYSTEM.OBSTACLE:
-        data.forEach(o => {
-          this.newObstacle(o)
-        })
-        break
-      case SYSTEM.MESSAGE:
-        this.game.msgCall({
-          id: Date.now(),
-          fromName: fromPlayer.userName,
-          content: data
-        })
-        break
-      default:
-        break
     }
   }
 
@@ -307,7 +267,7 @@ export default class TankScene extends Phaser.Scene {
       bullet.destroy()
       return
     }
-    this.sendMsg(newOrder(SKILL.HIT, PLAYER.ALL, {
+    this.sendOrder(Order.new(Order.SKILL_HIT, null, {
       bulletId: bullet.name,
       ...obtacle.getData('obstacleData')
     }))
@@ -315,14 +275,6 @@ export default class TankScene extends Phaser.Scene {
     new Explosion(this, obtacle.x, obtacle.y)
     bullet.destroy()
     obtacle.destroy()
-  }
-
-  fire () {
-    const o = this.player.getBarrelBullet()
-    if (!o) {
-      return
-    }
-    this.sendMsg(newOrder(SKILL.START, PLAYER.ALL, o))
   }
 
   onPause () {

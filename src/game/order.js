@@ -1,33 +1,65 @@
-export const ACTION = {
-  MOVING: -1000,
-  BARREL: -1001,
-  ENTER_MAP: -1002,
-  LEAVE_MAP: -1003
-}
+export default {
+  /**
+   * 心跳
+   */
+  HEART_BEAT: 66,
 
-export const SKILL = {
-  START: -2000,
-  HIT: -2001
-}
+  /**
+   * 玩家游戏数据
+   */
+  PLAYER_LOGIN: -1000,
+  /**
+   * 玩家退出
+   */
+  PLAYER_LOGOUT: -1001,
 
-export const PLAYER = {
-  LOGIN: -3000,
-  RECONNECT: -3001,
-  LOGOUT: -3002,
-  ALL: -3003,
-  HEART: -3004
-}
+  /**
+   * 进入地图
+   */
+  ENTER_MAP: -2000,
+  /**
+   * 地图玩家信息
+   */
+  MAP_PLAYER_DATAS: -2001,
+  /**
+   * 地图箱子
+   */
+  MAP_BOXES: -2002,
+  /**
+   * 运动
+   */
+  MOTION: -2101,
+  /**
+   * 炮塔运动
+   */
+  MOTION_BARREL: -2102,
+  /**
+   * 技能开始
+   */
+  SKILL_START: -2201,
+  /**
+   * 技能命中
+   */
+  SKILL_HIT: -2202,
 
-export const SYSTEM = {
-  GOD: -4000,
-  OBSTACLE: -4001,
-  MESSAGE: -4002
-}
+  /**
+   * 聊天
+   */
+  MSG: -3000,
 
-export const newOrder = function (id, toId, data) {
-  return {
-    id,
-    toId,
-    data
+  /**
+   * 系统
+   */
+  SYS: -4000,
+
+  /**
+   * 创建指令
+   */
+  new: function (id, toId, data) {
+    return {
+      id,
+      toId,
+      data
+    }
   }
 }

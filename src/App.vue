@@ -53,41 +53,7 @@ export default {
       msgText: '',
 
       players: [],
-      scoreVisible: false,
-
-      tankOptions: {
-        leftValve: 0,
-        rightValve: 0,
-        speedValve: 0,
-        barrelRadian: 0
-      },
-      leftValveID: -1,
-      rightValveID: -1,
-      speedValveID: -1,
-      barrelRadianID: -1
-    }
-  },
-
-  computed: {
-    leftValveStyle () {
-      return {
-        top: ((1 - this.tankOptions.leftValve) / 2) * 100 + '%'
-      }
-    },
-    rightValveStyle () {
-      return {
-        top: ((1 - this.tankOptions.rightValve) / 2) * 100 + '%'
-      }
-    },
-    speedValveStyle () {
-      return {
-        top: (1 - this.tankOptions.speedValve) * 100 + '%'
-      }
-    },
-    barrelRadianStyle () {
-      return {
-        top: (this.tankOptions.barrelRadian / Math.PI / 2) * 100 + '%'
-      }
+      scoreVisible: false
     }
   },
 
@@ -98,9 +64,7 @@ export default {
     const userInfo = JSON.parse(
       window.decodeURIComponent(window.atob(temp || '')) || '{}'
     )
-    console.log(userInfo)
     if (
-      !userInfo ||
       !userInfo.token ||
       !userInfo.timeLogin ||
       Date.now() / 1000 - userInfo.timeLogin > 3600 * 24 * 7
@@ -154,7 +118,7 @@ export default {
       if (!this.msgText) {
         return
       }
-      this.game.scene.getScene('tank-scene').sendText(this.msgText)
+      this.game.sendText(this.msgText)
       this.msgText = ''
     },
 

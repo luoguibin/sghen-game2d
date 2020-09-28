@@ -10,14 +10,15 @@ export default class Tank extends Phaser.GameObjects.Container {
    * @param {Number} x
    * @param {Number} y
    */
-  constructor (scene, x, y) {
+  constructor (scene, x = 200, y = 200, id, userName) {
     super(scene, x, y)
+    this.id = id
+    this.userName = userName
 
     // 附加属性
     this.tankSpeed = 0
     this.tankTurn = 0
     this.barrelTurn = 0
-    this.userName = 'Tank'
 
     this.bulletSpeed = 20
     this.bulletMax = 30
@@ -58,19 +59,13 @@ export default class Tank extends Phaser.GameObjects.Container {
     this.setRotation(-Math.PI / 2)
     this.setMass(250)
     this.setData('itemType', 'tank')
+    this.setName(this.id)
     scene.add.existing(this)
 
     setInterval(() => {
       this.addBulletCount()
     }, 10000)
     window.tank = this
-  }
-
-  setTankName (id, name) {
-    this.id = id
-    this.setName(id)
-    this.tankName.setText(name)
-    this.userName = name
   }
 
   addScore (v) {

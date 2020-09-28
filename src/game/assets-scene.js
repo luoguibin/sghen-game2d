@@ -87,9 +87,24 @@ export default class AssetsScene extends Phaser.Scene {
       return
     }
     this.loadingText.setText('资源加载完成!')
-    setTimeout(() => {
-      this.scene.start('tank-scene')
-    }, 300)
+    this.checkPlayerInfo()
+  }
+
+  /**
+   * 检测游戏玩家信息是否准备好
+   */
+  checkPlayerInfo () {
+    if (this.game.playerInfo) {
+      this.loadingText.setText('加载完成，正在进入!')
+      setTimeout(() => {
+        this.scene.start('tank-scene')
+      }, 300)
+    } else {
+      this.loadingText.setText('正在请求玩家数据...')
+      setTimeout(() => {
+        this.checkPlayerInfo()
+      }, 100)
+    }
   }
   /**
    * 文件加载出错
