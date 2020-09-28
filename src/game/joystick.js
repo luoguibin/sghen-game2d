@@ -25,10 +25,10 @@ export default class Joystick {
     // 方向摇杆
     this.bg = scene.add.circle(this.x, this.y, 100 * RATIO, 0xeeeeee, 0.3)
     this.bg.setScrollFactor(0, 0)
-    this.bg.setDepth(1)
+    this.bg.setDepth(99)
     this.stick = scene.add.circle(this.x, this.y, 30 * RATIO, 0x148acf)
     this.stick.setScrollFactor(0, 0)
-    this.stick.setDepth(1)
+    this.stick.setDepth(99)
     this.stick.setInteractive({
       draggable: true
     })
@@ -38,19 +38,19 @@ export default class Joystick {
     this.by = this.y
     this.barrelLeft = scene.add.circle(this.bx, this.by, 25 * RATIO, 0xeeeeee, 0.3)
     this.barrelLeft.setScrollFactor(0, 0)
-    this.barrelLeft.setDepth(1)
+    this.barrelLeft.setDepth(99)
     this.barrelLeft.setInteractive()
     this.barrelLeft.setData('itemType', 'barrelLeft')
 
     this.barrelRight = scene.add.circle(this.bx + 70 * RATIO, this.by, 25 * RATIO, 0xeeeeee, 0.3)
     this.barrelRight.setScrollFactor(0, 0)
-    this.barrelRight.setDepth(1)
+    this.barrelRight.setDepth(99)
     this.barrelRight.setInteractive()
     this.barrelRight.setData('itemType', 'barrelRight')
 
     this.fire = scene.add.circle(this.bx + 35 * RATIO, this.by + 70 * RATIO, 35 * RATIO, 0xeeeeee, 0.3)
     this.fire.setScrollFactor(0, 0)
-    this.fire.setDepth(1)
+    this.fire.setDepth(99)
     this.fire.setInteractive()
     this.fire.setData('itemType', 'fire')
 

@@ -26,18 +26,22 @@ export default class Tank extends Phaser.GameObjects.Container {
 
     // 底盘
     this.tankBody = new Phaser.GameObjects.Image(scene, 0, 0, 'tank-00', 'tank-body')
+    this.tankBody.setDepth(50)
     this.tankBody.setRotation(-Math.PI / 2)
     this.add(this.tankBody)
     // 炮塔
     this.tankBarrel = new Phaser.GameObjects.Image(scene, 0, 0, 'tank-00', 'tank-barrel')
+    this.tankBarrel.setDepth(50)
     this.tankBarrel.setOrigin(0.5, 0.3)
     this.tankBarrel.setRotation(-Math.PI / 2)
     this.add(this.tankBarrel)
 
     this.tankName = new Phaser.GameObjects.Text(scene, 0, 0)
+    this.tankName.setDepth(50)
     this.tankName.setText(this.userName)
     this.tankName.setFontSize(30)
     this.tankName.setOrigin(0.5, 0.5)
+    this.tankName.setAlign('center')
     this.tankName.setFill('#148acf')
     this.add(this.tankName)
 
@@ -58,7 +62,7 @@ export default class Tank extends Phaser.GameObjects.Container {
 
     setInterval(() => {
       this.addBulletCount()
-    }, 1000)
+    }, 10000)
     window.tank = this
   }
 
@@ -67,6 +71,10 @@ export default class Tank extends Phaser.GameObjects.Container {
     this.setName(id)
     this.tankName.setText(name)
     this.userName = name
+  }
+
+  addScore (v) {
+    this.score += v
   }
 
   /**
@@ -121,7 +129,7 @@ export default class Tank extends Phaser.GameObjects.Container {
     // 避免炮塔自身与炮弹直接碰撞
     const x = this.x + Math.cos(radian) * 63
     const y = this.y + Math.sin(radian) * 63
-    this.bulletCount--
+    this.addBulletCount(-1)
     return { radian, x, y }
   }
   /**
@@ -130,6 +138,13 @@ export default class Tank extends Phaser.GameObjects.Container {
    */
   addBulletCount (v = 1) {
     this.bulletCount = Math.min(this.bulletCount + v, this.bulletMax)
+    this.tankName.setText([
+      `${this.bulletCount}/${this.bulletMax}`,
+      this.userName
+    ])
+  }
+  addBulletMax (v = 3) {
+    this.bulletMax += 3
   }
   /**
    * 获取相对地图的炮塔弧度
@@ -150,9 +165,9 @@ export default class Tank extends Phaser.GameObjects.Container {
     }
 
     if (this.barrelTurn > 0) {
-      this.tankBarrel.rotation += Math.PI / 120
+      this.tankBarrel.rotation += Math.PI / 180
     } else if (this.barrelTurn < 0) {
-      this.tankBarrel.rotation -= Math.PI / 120
+      this.tankBarrel.rotation -= Math.PI / 180
     }
     this.tankName.rotation = -this.rotation
   }

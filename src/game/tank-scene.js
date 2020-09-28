@@ -99,34 +99,33 @@ export default class extends Phaser.Scene {
       return
     }
 
-    const itemType = obj0.getData('itemType')
-    if (itemType === 'bullet') {
-      if (obj1) {
-        switch (obj1.getData('itemType')) {
-          case 'obstacle':
-            // TODO 发送指令
-            this.newExplosion(obj0.x, obj0.y, obj0.getData('tankId'), obj1.getData('obstacleData'))
-            obj1.destroy()
-            break
-
-          default:
-            break
-        }
+    const itemType0 = obj0.getData('itemType')
+    const itemType1 = obj1 && obj1.getData('itemType')
+    if (!itemType1) {
+      if (itemType0 === 'bullet') {
+        obj0.destroy()
       }
-      obj0.destroy()
-    } else if (itemType === 'obstacle') {
-      if (obj1) {
-        switch (obj1.getData('itemType')) {
-          case 'bullet':
-            this.newExplosion(obj1.x, obj1.y, obj1.getData('tankId'), obj0.getData('obstacleData'))
-            obj1.destroy()
-            break
+      return
+    }
 
-          default:
-            break
-        }
+    if (itemType0 === 'bullet') {
+      switch (itemType1) {
+        case 'obstacle':
+          this.newExplosion(obj0, obj1)
+          break
+        default:
+          obj0.destroy()
+          break
       }
-      obj0.destroy()
+    } else if (itemType0 === 'obstacle') {
+      switch (itemType1) {
+        case 'bullet':
+          this.newExplosion(obj1, obj0)
+          break
+        default:
+          obj1.destroy()
+          break
+      }
     }
   }
   /**
@@ -265,32 +264,48 @@ export default class extends Phaser.Scene {
 
   newObstacle (o) {
     const obstacle = this.matter.add.image(o.x, o.y, 'xiangzi-00')
+    obstacle.setName(o.id)
     obstacle.setStatic(true)
     obstacle.setData('itemType', 'obstacle')
     obstacle.setData('obstacleData', o)
     obstacle.setScale(0.2, 0.2)
+    if (o.type === 'add') {
+      obstacle.setTint(0x148acf)
+    } else if (o.type === 'add-all') {
+      obstacle.setTint(0xcf148a)
+    }
     // type、value
   }
 
-  handleHit (player, data, isLocal) {
-    if (!isLocal && player.id === this.player.id) {
-      return
-    }
-    const { obstacleId, skillId } = data
-    console.log('SKILL_HIT', obstacleId, skillId)
-    const index = this.obstacles.findIndex(o => o.id === obstacleId)
-    const obstacle = this.obstacles.splice(index, 1)[0]
-    if (!obstacle) {
-      console.log('empty obstacle')
-      return
-    }
-    if (obstacle.type === 'add') {
-      player.addSpeed()
-    } else if (obstacle.type === 'add-all') {
+  handleHit (player, data) {
+    const { id, type, value, x, y } = data
+    player.addScore(value)
+    if (type === 'add') {
+      player.addBulletCount(10)
+    } else if (type === 'add-all') {
       player.addBulletMax()
     }
-    player.addScore(obstacle.value)
-    player.newHit(obstacle, skillId)
+    if (player !== this.player) {
+      const obstacle = this.children.getByName(id)
+      new Explosion(this, x, y)
+      obstacle.destroy()
+    }
+  }
+
+  newExplosion (bullet, obtacle) {
+    const tankId = bullet.getData('tankId')
+    if (tankId !== this.player.id) {
+      bullet.destroy()
+      return
+    }
+    this.sendMsg(newOrder(SKILL.HIT, PLAYER.ALL, {
+      bulletId: bullet.name,
+      ...obtacle.getData('obstacleData')
+    }))
+
+    new Explosion(this, obtacle.x, obtacle.y)
+    bullet.destroy()
+    obtacle.destroy()
   }
 
   fire () {
@@ -299,13 +314,6 @@ export default class extends Phaser.Scene {
       return
     }
     this.sendMsg(newOrder(SKILL.START, PLAYER.ALL, o))
-  }
-
-  newExplosion (x, y, tankId, obstacle) {
-    // if (this.player.id === tankId) {
-    //   return
-    // }
-    new Explosion(this, x, y)
   }
 
   onPause () {
@@ -324,7 +332,7 @@ export default class extends Phaser.Scene {
 
     if (this.player) {
       const { x, y } = this.player
-      this.positionText.setText([`x:${x >> 0}\ny:${y >> 0}`, this.player.score])
+      this.positionText.setText([`x:${x >> 0}\ny:${y >> 0}`, `score:${this.player.score}`])
     }
   }
 }
