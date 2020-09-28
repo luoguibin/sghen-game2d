@@ -57,7 +57,7 @@ export default class extends Phaser.Game {
       }
       this.ws.send(JSON.stringify(e))
     })
-    const isTest = true
+    const isTest = false
     if (isTest) {
       this.boxes = []
       this.map = {
@@ -70,7 +70,6 @@ export default class extends Phaser.Game {
           const order = JSON.parse(s)
           switch (order.id) {
             case Order.HEART_BEAT:
-              console.log('heart-beat')
               break
             case Order.PLAYER_LOGIN:
               this.playerInfo = order.data
@@ -134,7 +133,7 @@ export default class extends Phaser.Game {
       return
     }
 
-    const socket = new WebSocket(`${WS_URL}?token=${this.game.userInfo.token}`)
+    const socket = new WebSocket(`${WS_URL}?token=${this.userInfo.token}`)
     socket.addEventListener('open', () => {
       console.log('socket is open')
 
@@ -152,7 +151,7 @@ export default class extends Phaser.Game {
             })
             break
           default:
-            this.events.emit('order', order)
+            this.events.emit('order-deal', order)
             break
         }
       })

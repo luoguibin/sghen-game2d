@@ -84,6 +84,11 @@ export default {
       return
     }
 
+    // const userInfo = {
+    //   id: 16405,
+    //   username: 'yimo',
+    //   token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDE4ODc3NjksImlhdCI6MTYwMTI4Mjk2OSwidXNlcklkIjoxNjQwNSwidXNlck5hbWUiOiJ5aW1vIiwidUxldmVsIjo5fQ.fPU_wYVvnLqy6fDkr53oqVwilu8N-CsmXTNG8tYv6n0'
+    // }
     this.game = new PhaserGame(this.$el, userInfo)
     this.game.msgCall = this.msgCall.bind(this)
     this.game.scoreCall = this.scoreCall.bind(this)

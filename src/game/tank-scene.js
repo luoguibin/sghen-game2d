@@ -74,7 +74,6 @@ export default class TankScene extends Phaser.Scene {
     })
 
     this.game.events.on('order-deal', (o) => {
-      console.log('order-deal', o)
       this.dealOrder(o)
     })
 
@@ -104,7 +103,7 @@ export default class TankScene extends Phaser.Scene {
     switch (id) {
       case Order.ENTER_MAP: {
         const info = data.player
-        const player = new Tank(this, info.x, info.y, info.id, info.userName)
+
         if (info.id === this.game.playerInfo.id) {
           // 重置地图信息
           this.gameMap = data.map
@@ -113,13 +112,17 @@ export default class TankScene extends Phaser.Scene {
           this.bg.setSize(width, height)
 
           // 镜头跟随
+          const player = new Tank(this, info.x, info.y, info.id, info.userName)
           this.cameras.main.startFollow(player)
           this.players = [player]
           this.player = player
 
           this.sendOrder(Order.new(Order.MAP_PLAYER_DATAS, null, { boxes: true }))
         } else {
-          this.players.push(player)
+          if (this.children.getByName(info.id)) {
+            return
+          }
+          this.players.push(new Tank(this, info.x, info.y, info.id, info.userName))
         }
       }
         break
@@ -127,7 +130,9 @@ export default class TankScene extends Phaser.Scene {
         /** @type {Array} */
         const playerList = data.players || []
         playerList.forEach(info => {
-          this.players.push(new Tank(this, info.x, info.y, info.id, info.userName))
+          if (info.id !== this.player.id) {
+            this.players.push(new Tank(this, info.x, info.y, info.id, info.userName))
+          }
         })
 
         // 箱子信息

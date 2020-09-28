@@ -2,7 +2,7 @@ export default {
   /**
    * 心跳
    */
-  HEART_BEAT: 66,
+  HEART_BEAT: -66,
 
   /**
    * 玩家游戏数据
