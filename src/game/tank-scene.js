@@ -166,9 +166,11 @@ export default class TankScene extends Phaser.Scene {
       case Order.MOTION:
         fromPlayer.setTankSpeed(data.speed)
         fromPlayer.setTankTurn(data.turn)
+        fromPlayer.setPosition(data.x, data.y)
         break
       case Order.MOTION_BARREL:
         fromPlayer.setTankBarrelTurn(data.value)
+        fromPlayer.setPosition(data.x, data.y)
         break
       case Order.SKILL_START:
         fromPlayer.fire(data)
@@ -189,10 +191,12 @@ export default class TankScene extends Phaser.Scene {
   }
 
   _handleDirection (speed, turn) {
-    this.sendOrder(Order.new(Order.MOTION, Order.ALL, { speed, turn }))
+    const { x, y } = this.player
+    this.sendOrder(Order.new(Order.MOTION, Order.ALL, { speed, turn, x, y }))
   }
   _handleBarrel (value) {
-    this.sendOrder(Order.new(Order.MOTION_BARREL, Order.ALL, { value }))
+    const { x, y } = this.player
+    this.sendOrder(Order.new(Order.MOTION_BARREL, Order.ALL, { value, x, y }))
   }
   /**
    * @param {Phaser.GameObjects} obj0
