@@ -112,7 +112,8 @@ export default class TankScene extends Phaser.Scene {
           this.bg.setSize(width, height)
 
           // 镜头跟随
-          const player = new Tank(this, info.x, info.y, info.id, info.userName)
+          const player = new Tank(this, info.x, info.y, info.id, info.username)
+          player.addScore(info.score || 0)
           this.cameras.main.startFollow(player)
           this.players = [player]
           this.player = player
@@ -122,7 +123,9 @@ export default class TankScene extends Phaser.Scene {
           if (this.children.getByName(info.id)) {
             return
           }
-          this.players.push(new Tank(this, info.x, info.y, info.id, info.userName))
+          const player = new Tank(this, info.x, info.y, info.id, info.username)
+          player.addScore(info.score || 0)
+          this.players.push(player)
         }
       }
         break
@@ -131,7 +134,9 @@ export default class TankScene extends Phaser.Scene {
         const playerList = data.players || []
         playerList.forEach(info => {
           if (info.id !== this.player.id) {
-            this.players.push(new Tank(this, info.x, info.y, info.id, info.userName))
+            const player = new Tank(this, info.x, info.y, info.id, info.username)
+            player.addScore(info.score || 0)
+            this.players.push(player)
           }
         })
 
@@ -141,6 +146,8 @@ export default class TankScene extends Phaser.Scene {
         boxList.forEach(o => {
           this.newObstacle(o)
         })
+
+        this.refreshScores()
       }
         break
       case Order.PLAYER_LOGOUT: {
@@ -245,18 +252,25 @@ export default class TankScene extends Phaser.Scene {
   }
 
   handleHit (player, data) {
-    const { id, type, value, x, y } = data
-    player.addScore(value)
-    if (type === 'add') {
-      player.addBulletCount(10)
-    } else if (type === 'add-all') {
-      player.addBulletMax()
+    const { id, type, value, x, y, score } = data
+    if (score) {
+      player.addScore(value)
+      if (type === 'add') {
+        player.addBulletCount(10)
+      } else if (type === 'add-all') {
+        player.addBulletMax()
+      }
     }
+
     if (player !== this.player) {
       const obstacle = this.children.getByName(id)
       new Explosion(this, x, y)
       obstacle.destroy()
     }
+    this.refreshScores()
+  }
+
+  refreshScores () {
     this.game.scoreCall(this.players.map(o => {
       return {
         id: o.id,
