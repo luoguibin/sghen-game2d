@@ -122,7 +122,10 @@ export default class TankScene extends Phaser.Scene {
 
           this.sendOrder(Order.new(Order.MAP_PLAYER_DATAS, null, { boxes: true }))
         } else {
-          if (this.children.getByName(info.id)) {
+          /** @type {Tank} */
+          const oldPlayer = this.children.getByName(info.id)
+          if (oldPlayer) {
+            oldPlayer.setPosition(200, 200)
             return
           }
           const player = new Tank(this, info.x, info.y, info.id, info.username)

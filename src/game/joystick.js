@@ -134,7 +134,7 @@ export default class Joystick {
     dragX -= scrollX - this.cScrollX
     dragY -= scrollY - this.cScrollY
     const radian = Math.atan2(dragY - this.y, dragX - this.x)
-    const DISTANCE = 80
+    const DISTANCE = 80 * RATIO
     const distance = Phaser.Math.Distance.Between(this.x, this.y, dragX, dragY)
     if (distance > DISTANCE) {
       dragX = this.x + Math.cos(radian) * DISTANCE
