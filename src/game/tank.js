@@ -86,6 +86,12 @@ export default class Tank extends Phaser.GameObjects.Container {
   setTankBarrelTurn (v) {
     this.barrelTurn = v || 0
   }
+  setBarrelRatation (v) {
+    this.tankBarrel.setRotation(v)
+  }
+  getBarrelRatation () {
+    return this.tankBarrel.rotation
+  }
   /**
    * 设置速度
    * @param {Number} v
@@ -120,7 +126,7 @@ export default class Tank extends Phaser.GameObjects.Container {
     if (!this.bulletCount) {
       return
     }
-    const radian = this.getBarrelRadian()
+    const radian = this.getBarrelRatationByWorld()
     // 避免炮塔自身与炮弹直接碰撞
     const x = this.x + Math.cos(radian) * 63
     const y = this.y + Math.sin(radian) * 63
@@ -144,7 +150,7 @@ export default class Tank extends Phaser.GameObjects.Container {
   /**
    * 获取相对地图的炮塔弧度
    */
-  getBarrelRadian () {
+  getBarrelRatationByWorld () {
     return this.tankBarrel.rotation + this.rotation + Math.PI / 2
   }
 

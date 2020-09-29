@@ -13,6 +13,7 @@ export default class TankScene extends Phaser.Scene {
 
   /**
    * 玩家自身
+   * @type {Tank}
    */
   player = null
 
@@ -98,6 +99,7 @@ export default class TankScene extends Phaser.Scene {
    */
   dealOrder (order) {
     const { id, fromId, data } = order
+    /** @type {Tank} */
     const fromPlayer = this.children.getByName(fromId)
 
     switch (id) {
@@ -166,11 +168,16 @@ export default class TankScene extends Phaser.Scene {
       case Order.MOTION:
         fromPlayer.setTankSpeed(data.speed)
         fromPlayer.setTankTurn(data.turn)
-        fromPlayer.setPosition(data.x, data.y)
+        if (data.speed === 0) {
+          fromPlayer.setPosition(data.x, data.y)
+          fromPlayer.setBarrelRatation(data.barrelRotation)
+        }
         break
       case Order.MOTION_BARREL:
         fromPlayer.setTankBarrelTurn(data.value)
-        fromPlayer.setPosition(data.x, data.y)
+        if (data.value === 0) {
+          fromPlayer.setPosition(data.x, data.y)
+        }
         break
       case Order.SKILL_START:
         fromPlayer.fire(data)
@@ -192,7 +199,8 @@ export default class TankScene extends Phaser.Scene {
 
   _handleDirection (speed, turn) {
     const { x, y } = this.player
-    this.sendOrder(Order.new(Order.MOTION, Order.ALL, { speed, turn, x, y }))
+    const data = { speed, turn, x, y, barrelRotation: this.player.getBarrelRatation() }
+    this.sendOrder(Order.new(Order.MOTION, Order.ALL, data))
   }
   _handleBarrel (value) {
     const { x, y } = this.player
@@ -246,7 +254,7 @@ export default class TankScene extends Phaser.Scene {
     obstacle.setData('obstacleData', o)
     obstacle.setScale(0.2, 0.2)
     if (o.type === 'add') {
-      //
+      obstacle.setTint(0xcf148a)
     } else if (o.type === 'add-all') {
       //
     } else {
@@ -268,6 +276,7 @@ export default class TankScene extends Phaser.Scene {
 
     if (player !== this.player) {
       const obstacle = this.children.getByName(id)
+      // eslint-disable-next-line
       new Explosion(this, x, y)
       obstacle.destroy()
     }
@@ -295,6 +304,7 @@ export default class TankScene extends Phaser.Scene {
       ...obtacle.getData('obstacleData')
     }))
 
+    // eslint-disable-next-line
     new Explosion(this, obtacle.x, obtacle.y)
     bullet.destroy()
     obtacle.destroy()
