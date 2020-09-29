@@ -10,8 +10,7 @@ export const CANVAS_HEIGHT = PIXEL_RATIO * WINDOW_HEIGHT
 /**
  * socket地址
  */
-// export const WS_URL = 'wss://www.sghen.cn/ggapi/auth/game2d'
-export const WS_URL = 'ws://10.48.84.235:8282/auth/game2d'
+export const WS_URL = process.env.NODE_ENV === 'production' ? 'wss://www.sghen.cn/ggapi/auth/game2d' : 'ws://10.48.84.235:8282/auth/game2d'
 
 /**
  * 心跳时间间隔
