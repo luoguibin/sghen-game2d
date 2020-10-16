@@ -12,6 +12,14 @@ export default class extends Phaser.Game {
   ws = null
 
   /**
+   * 用于标记服务器时间同步,
+   * 记录时间差
+   */
+  timeFlag = 1
+  timeDiff = 0
+  previousTime = 0
+
+  /**
    * @param {HTMLElement} parentEl
    * @param {Object} userInfo
    */
@@ -140,6 +148,16 @@ export default class extends Phaser.Game {
       socket.addEventListener('message', (e) => {
         const order = JSON.parse(e.data)
         switch (order.id) {
+          case Order.HEART_BEAT:
+            if (this.timeFlag === 1) {
+              this.timeFlag--
+              this.events.emit('order-send', Order.new(Order.HEART_BEAT))
+              this.previousTime = order.time
+            } else if (this.timeFlag === 0) {
+              this.timeFlag--
+              this.timeDiff = order.time - this.previousTime
+            }
+            break
           case Order.PLAYER_LOGIN:
             this.playerInfo = order.data
             break

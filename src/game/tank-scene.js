@@ -169,18 +169,23 @@ export default class TankScene extends Phaser.Scene {
       }
         break
       case Order.MOTION:
-        fromPlayer.setTankSpeed(data.speed)
-        fromPlayer.setTankTurn(data.turn)
         if (data.speed === 0) {
-          fromPlayer.setPosition(data.x, data.y)
+          const { rotation, tankSpeed } = fromPlayer
+          const timeDiff = this.game.timeDiff || 0
+          const diffValue = timeDiff / 16 * tankSpeed
+          const x = Math.cos(rotation) * diffValue
+          const y = Math.sin(rotation) * diffValue
+          fromPlayer.setPosition(data.x + x, data.y + y)
           fromPlayer.setBarrelRatation(data.barrelRotation)
         }
+        fromPlayer.setTankSpeed(data.speed)
+        fromPlayer.setTankTurn(data.turn)
         break
       case Order.MOTION_BARREL:
         fromPlayer.setTankBarrelTurn(data.value)
-        if (data.value === 0) {
-          fromPlayer.setPosition(data.x, data.y)
-        }
+        // if (data.value === 0) {
+        //   fromPlayer.setPosition(data.x, data.y)
+        // }
         break
       case Order.SKILL_START:
         fromPlayer.fire(data)
